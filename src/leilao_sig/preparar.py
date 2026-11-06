@@ -17,7 +17,7 @@ from leilao_sig.execucao import Execucao
 from leilao_sig.modelos import (
     Bloco, CabecalhoPreparado, ExtracaoEdital, LotePreparado, Preparacao, Pregao, Problema,
 )
-from leilao_sig.planilha import Bem, PlanilhaInvalida, ler_planilha
+from leilao_sig.planilha import TIPOS, Bem, PlanilhaInvalida, agrupar, ler_planilha
 from leilao_sig.util import fmt_data, parse_data, sem_acento
 
 log = logging.getLogger(__name__)
@@ -138,13 +138,16 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, 
     prep.problemas += [Problema("alerta", f"IA: {a}") for a in ext.alertas]
 
     # Lotes
-    cruzados, gerais = mod_lotes.cruzar(ext.lotes, bens)
+    grupos, avisos_grupos = agrupar(bens)
+    prep.problemas += [Problema("alerta", a) for a in avisos_grupos]
+    cruzados, gerais = mod_lotes.cruzar(ext.lotes, grupos)
     prep.problemas += gerais
     fonte = config.app().get("fonte_valores", "planilha")
     preparados: dict[int, LotePreparado] = {}
     para_ordenar = []
     for lote, bem, probs in cruzados:
-        probs += mod_lotes.problemas_do_lote(lote)
+        tipo = bem.tipo if bem and bem.tipo != "outro" else lote.tipo_bem
+        probs += mod_lotes.problemas_do_lote(lote, tipo)
         vals: dict[str, str] = {}
         if bem:
             vals, pv = mod_lotes.valores(lote, bem, fonte)
@@ -152,12 +155,12 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, 
         lp = LotePreparado(
             ordem=0, numero_no_edital=lote.numero_no_edital, processo=lote.processo,
             vistoria=bem.vistoria if bem else "", chave_vistoria=lote.chave_vistoria,
-            tipo_bem=lote.tipo_bem, titulo=lote.titulo, html=montagem.lote_html(lote, ext.distrito_federal),
+            tipo_bem=tipo, aba_sig=TIPOS.get(tipo, ("", ""))[1], titulo=lote.titulo, html=montagem.lote_html(lote, ext.distrito_federal),
             v1=vals.get("v1", ""), aval=vals.get("aval", ""), v2=vals.get("v2", ""),
             trecho_edital=lote.trecho_edital, problemas=probs,
         )
         preparados[id(lote)] = lp
-        para_ordenar.append((lote, bem.avaliacao if bem and bem.avaliacao is not None else 0))
+        para_ordenar.append((lote, tipo, bem.avaliacao if bem and bem.avaliacao is not None else 0))
     for i, lote in enumerate(mod_lotes.ordenar(para_ordenar), start=1):
         preparados[id(lote)].ordem = i
     prep.lotes = sorted(preparados.values(), key=lambda l: l.ordem)

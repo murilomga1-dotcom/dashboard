@@ -117,7 +117,7 @@ class Janela(QMainWindow):
         lc.addWidget(sp)
         self.abas.addTab(cab, "Cabeçalho e datas")
         lot = QSplitter(Qt.Orientation.Vertical)
-        self.tab_lotes = _tabela(["Ordem", "Lote edital", "Processo", "Vistoria", "Tipo", "Título", "Inicial 1º", "Avaliação", "Inicial 2º", "Situação"])
+        self.tab_lotes = _tabela(["Ordem", "Lote edital", "Processo", "Vistoria", "Aba no SIG", "Título", "Inicial 1º", "Avaliação", "Inicial 2º", "Situação"])
         self.tab_lotes.itemSelectionChanged.connect(self._mostrar_lote)
         self.html_lote = QTextBrowser()
         lot.addWidget(self.tab_lotes)
@@ -216,7 +216,7 @@ class Janela(QMainWindow):
             _preencher(self.tab_ciclos, [])
         _preencher(
             self.tab_lotes,
-            [[l.ordem, l.numero_no_edital, l.processo, l.vistoria, l.tipo_bem, l.titulo, l.v1, l.aval, l.v2,
+            [[l.ordem, l.numero_no_edital, l.processo, l.vistoria, l.aba_sig or l.tipo_bem, l.titulo, l.v1, l.aval, l.v2,
               "OK" if l.pode_gravar else "ERRO — será pulado"] for l in prep.lotes],
             [None if l.pode_gravar else COR_ERRO for l in prep.lotes],
         )

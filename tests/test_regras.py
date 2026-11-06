@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 
 from leilao_sig import ciclos, config, documento, lotes, montagem
-from leilao_sig.planilha import ler_planilha
+from leilao_sig.planilha import agrupar, ler_planilha
 from leilao_sig.util import fmt_valor, parse_valor
 from tests import fabrica
 
@@ -86,11 +86,7 @@ def test_planilha(tmp_path):
     assert avisos == []
 
 
-def test_planilha_repetida_e_sem_cabecalho(tmp_path):
-    bens, avisos = ler_planilha(fabrica.planilha(tmp_path / "p.xlsx", [
-        [fabrica.PROC_A, "Veículo", 1, 1, 10, 5, "a"], [fabrica.PROC_A, "Veículo", 1, 1, 10, 5, "a"],
-    ]))
-    assert any("repetidos" in a for a in avisos)
+def test_planilha_sem_cabecalho(tmp_path):
     import openpyxl
     wb = openpyxl.Workbook(); wb.active.append(["x", "y"]); wb.save(tmp_path / "ruim.xlsx")
     from leilao_sig.planilha import PlanilhaInvalida
@@ -106,16 +102,17 @@ def test_triagem():
     assert dois.bloqueado and "2 editais" in dois.motivo
 
 
-def test_cruzamento_varios_bens_por_processo(tmp_path):
+def test_cruzamento_varias_vistorias_por_processo(tmp_path):
     ext = fabrica.extracao()
     bens, _ = ler_planilha(fabrica.planilha(tmp_path / "p.xlsx"))
+    bens, _ = agrupar(bens)
     cruz, gerais = lotes.cruzar(ext.lotes, bens)
     assert [b.vistoria for _, b, _ in cruz] == ["33578", "33579", "33600"]  # 3º sem vistoria: processo tem 1 bem só
     assert gerais == []
     # Sem a IA indicar, processo com 2 bens é ambíguo -> erro só naquele lote
     ambiguo = fabrica._lote(vistoria_planilha=None)
     cruz, _ = lotes.cruzar([ambiguo], bens)
-    assert cruz[0][1] is None and "2 bens" in cruz[0][2][0].mensagem
+    assert cruz[0][1] is None and "2 vistorias" in cruz[0][2][0].mensagem
     # Mesma vistoria em dois lotes -> o segundo dá erro
     cruz, _ = lotes.cruzar([fabrica._lote(), fabrica._lote(numero_no_edital="9")], bens)
     assert cruz[1][1] is None and "já foi usada" in cruz[1][2][0].mensagem
@@ -127,13 +124,13 @@ def test_ordem_dos_lotes():
     c = fabrica._lote(numero_no_edital="C", processo="1", tipo_bem="veiculo")
     d = fabrica._lote(numero_no_edital="D", processo="3", tipo_bem="veiculo")
     e = fabrica._lote(numero_no_edital="E", processo="4", tipo_bem="equipamento")
-    ordem = lotes.ordenar([(a, Decimal(10)), (b, Decimal(1)), (c, Decimal(50)), (d, Decimal(30)), (e, Decimal(999))])
+    ordem = lotes.ordenar([(x, x.tipo_bem, v) for x, v in ((a, Decimal(10)), (b, Decimal(1)), (c, Decimal(50)), (d, Decimal(30)), (e, Decimal(999)))])
     # imóvel primeiro; veículos: processo 1 (maior = 50) junto: C, A; depois D; depois demais
     assert [l.numero_no_edital for l in ordem] == ["B", "C", "A", "D", "E"]
 
 
 def test_valores_e_divergencia(tmp_path):
-    bens, _ = ler_planilha(fabrica.planilha(tmp_path / "p.xlsx"))
+    bens, _ = agrupar(ler_planilha(fabrica.planilha(tmp_path / "p.xlsx"))[0])
     vals, probs = lotes.valores(fabrica._lote(), bens[0])
     assert vals == {"v1": "40.000,00", "aval": "40.000,00", "v2": "20.000,00"} and probs == []
     vals, probs = lotes.valores(fabrica._lote(avaliacao_edital="41.000,00"), bens[0])
@@ -168,3 +165,39 @@ def test_html_lote():
     assert "<strong>(O VEÍCULO PODE SER PARCELADO)</strong>" in html
     assert "Localização do bem: Rua A" in html
     assert "Cartório" not in html  # partes só no DF
+
+
+def test_vistoria_com_varios_bens_formato_real(tmp_path):
+    """Formato da planilha real (sem coluna ID Vistoria): várias linhas com a mesma vistoria
+    são um lote só, com valores somados; o mesmo processo pode ter duas vistorias."""
+    import openpyxl
+    wb = openpyxl.Workbook(); ws = wb.active
+    ws.append(["BENS DO LEILÃO — JE Salvador/BA"])
+    ws.append(["Processo", "Tipo do Bem", "Nº Vistoria", "Avaliação", "Lance Mínimo", "Descrição"])
+    ws.append(["0001472-91.2018.8.05.0001", "Veículos", "33731", 30000, 18000, "barco"])
+    ws.append(["0001472-91.2018.8.05.0001", "Equipamentos", "13819", 10000, 6000, "mesa 1"])
+    ws.append(["0001472-91.2018.8.05.0001", "Equipamentos", "13819", 7770, 4662, "mesa 2"])
+    ws.append(["0030527-29.2014.8.05.0001", "Equipamentos", "13820", 1000, 600, "ar 9.000 BTUs quarto"])
+    ws.append(["0030527-29.2014.8.05.0001", "Equipamentos", "13820", 1000, 600, "ar 9.000 BTUs quarto"])
+    wb.save(tmp_path / "real.xlsx")
+    bens, avisos = ler_planilha(tmp_path / "real.xlsx")
+    assert len(bens) == 5 and avisos == []
+    grupos, avisos = agrupar(bens)
+    assert avisos == []
+    assert [(g.vistoria, g.tipo, g.aba_sig, str(g.avaliacao), str(g.lance_minimo), len(g.bens)) for g in grupos] == [
+        ("33731", "veiculo", "Veículos", "30000.00", "18000.00", 1),
+        ("13819", "equipamento", "Equipamentos", "17770.00", "10662.00", 2),
+        ("13820", "equipamento", "Equipamentos", "2000.00", "1200.00", 2),
+    ]
+    # Processo com 2 vistorias: a IA precisa dizer qual é; com a indicação, cruza certo
+    l = fabrica._lote(processo="0001472-91.2018.8.05.0001", vistoria_planilha="13819", tipo_bem="equipamento")
+    cruz, gerais = lotes.cruzar([l], grupos)
+    assert cruz[0][1].vistoria == "13819" and len(gerais) == 2  # as outras duas vistorias ficam como alerta
+
+
+def test_mesma_vistoria_em_processos_diferentes(tmp_path):
+    bens, _ = ler_planilha(fabrica.planilha(tmp_path / "p.xlsx", [
+        [fabrica.PROC_A, "Veículo", 7, 1, 10, 5, "a"], [fabrica.PROC_B, "Imóvel", 7, 1, 10, 5, "b"],
+    ]))
+    _, avisos = agrupar(bens)
+    assert "processos diferentes" in avisos[0]

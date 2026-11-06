@@ -66,12 +66,23 @@ virou código testado, e a IA não calcula nada disso.
 |---|---|---|
 | Valores divergentes planilha × edital | Planilha vale; divergência vira alerta | `config/app.json` → `fonte_valores` |
 | Tela de revisão antes de gravar | Obrigatória | `config/app.json` → `revisao_obrigatoria` |
-| Processo com vários bens | A IA casa lote ↔ linha da planilha pela descrição; o código confere que processo e vistoria existem e que nenhuma linha foi usada duas vezes | `cruzamento.py` |
+| Vistoria com vários bens | Linhas com o mesmo processo + vistoria são **um lote só**, com avaliação e lance mínimo somados (confirmado no edital real: 3 equipamentos = 1 lote de R$ 26.000,00) | `planilha.agrupar` |
+| Processo com várias vistorias | A IA casa lote ↔ vistoria pela descrição; o código confere que processo e vistoria existem e que nenhuma vistoria foi usada duas vezes | `lotes.cruzar` |
+| Tipo do bem / aba no SIG | Vale a coluna "Tipo do Bem" da planilha (Imóveis / Veículos / Equipamentos); se a IA ler outro tipo, vira alerta | `planilha.TIPOS` |
 | Formato do processo | Compara só os dígitos | `planilha.normalizar_processo` |
+
+## O que o exemplo real mostrou (edital TJBA + bens_leilao_7817.xlsx)
+
+- A planilha não tem coluna "ID Vistoria" (o app aceita sem ela) e o Nº Vistoria vem como texto.
+- Uma vistoria reúne vários bens (até 10 linhas) e um processo pode ter duas vistorias de tipos
+  diferentes (barco em "Veículos" + mesas em "Equipamentos").
+- A planilha cobre uma sessão inteira ("JE Salvador/BA (Paulo) (tarde)", 16 processos), mas o
+  processo do edital enviado (0056381-54.2016.8.05.0001) **não está nela**.
 
 ## Pendências
 
-- Exemplo real da planilha de vistorias (formato do nº do processo, mais de um bem por processo).
+- Confirmar se a planilha é de outra sessão e como funciona a sessão: um edital por processo,
+  todos no mesmo leilão do SIG? Se sim, o app precisa aceitar vários editais + uma planilha.
 - O SIG tem API ou importação por planilha? (seria mais estável que automatizar a tela)
 - Quantos PCs vão usar? (se mais de um, o registro anti-duplicidade precisa ser compartilhado)
 - Calendário 2027/2028: feriados e recesso além da tabela atual.

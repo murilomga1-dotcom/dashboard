@@ -5,30 +5,30 @@ from __future__ import annotations
 from decimal import Decimal
 
 from leilao_sig.modelos import LoteIA, Problema
-from leilao_sig.planilha import Bem, normalizar_processo, normalizar_vistoria
+from leilao_sig.planilha import Grupo, normalizar_processo, normalizar_vistoria
 from leilao_sig.util import fmt_valor, parse_valor
 
 LIMITE_TITULO = 56
 ORDEM_TIPO = {"imovel": 0, "veiculo": 1}
 
 
-def cruzar(lotes: list[LoteIA], bens: list[Bem]) -> tuple[list[tuple[LoteIA, Bem | None, list[Problema]]], list[Problema]]:
-    """Casa cada lote com uma linha da planilha.
+def cruzar(lotes: list[LoteIA], grupos: list[Grupo]) -> tuple[list[tuple[LoteIA, Grupo | None, list[Problema]]], list[Problema]]:
+    """Casa cada lote do edital com uma vistoria (grupo de linhas) da planilha.
 
     A IA indica a vistoria (pela descrição); aqui o código confere que ela existe, é do mesmo
-    processo e não foi usada por outro lote. Se a IA não indicou e o processo tem um bem só
-    na planilha, usa esse bem.
+    processo e não foi usada por outro lote. Se a IA não indicou e o processo tem uma vistoria
+    só na planilha, usa essa.
     """
-    por_processo: dict[str, list[Bem]] = {}
-    for b in bens:
-        por_processo.setdefault(b.processo_digitos, []).append(b)
+    por_processo: dict[str, list[Grupo]] = {}
+    for g in grupos:
+        por_processo.setdefault(g.processo_digitos, []).append(g)
     usados: dict[tuple, str] = {}
     saida = []
     for lote in lotes:
         probs: list[Problema] = []
         proc = normalizar_processo(lote.processo)
         candidatos = por_processo.get(proc, [])
-        escolhido: Bem | None = None
+        escolhido: Grupo | None = None
 
         def erro(msg: str) -> None:
             probs.append(Problema("erro", msg, lote.processo, lote.numero_no_edital, lote.trecho_edital))
@@ -45,8 +45,8 @@ def cruzar(lotes: list[LoteIA], bens: list[Bem]) -> tuple[list[tuple[LoteIA, Bem
                 escolhido = candidatos[0]
             else:
                 erro(
-                    f"Processo {lote.processo} tem {len(candidatos)} bens na planilha "
-                    f"(vistorias {', '.join(b.vistoria for b in candidatos)}) e não foi possível saber qual é este lote."
+                    f"Processo {lote.processo} tem {len(candidatos)} vistorias na planilha "
+                    f"({', '.join(g.vistoria for g in candidatos)}) e não foi possível saber qual é este lote."
                 )
         if escolhido:
             if escolhido.chave in usados:
@@ -57,15 +57,16 @@ def cruzar(lotes: list[LoteIA], bens: list[Bem]) -> tuple[list[tuple[LoteIA, Bem
         saida.append((lote, escolhido, probs))
 
     gerais = [
-        Problema("alerta", f"Vistoria {b.vistoria} (linha {b.linha}) não corresponde a nenhum lote do edital.", b.processo)
-        for b in bens
-        if b.chave not in usados
+        Problema("alerta", f"Vistoria {g.vistoria} (linha {g.linhas}) não corresponde a nenhum lote do edital.", g.processo)
+        for g in grupos
+        if g.chave not in usados
     ]
     return saida, gerais
 
 
-def valores(lote: LoteIA, bem: Bem, fonte: str = "planilha") -> tuple[dict[str, str], list[Problema]]:
-    """v1 = aval = avaliação; v2 = lance mínimo do 2º leilão. Divergência planilha × edital vira alerta."""
+def valores(lote: LoteIA, bem: Grupo, fonte: str = "planilha") -> tuple[dict[str, str], list[Problema]]:
+    """v1 = aval = avaliação; v2 = lance mínimo do 2º leilão (somas da vistoria).
+    Divergência planilha × edital vira alerta."""
     probs: list[Problema] = []
 
     def aviso(nivel: str, msg: str) -> None:
@@ -80,6 +81,8 @@ def valores(lote: LoteIA, bem: Bem, fonte: str = "planilha") -> tuple[dict[str, 
     if min_ed is not None and bem.lance_minimo is not None and min_ed != bem.lance_minimo:
         aviso("alerta", f"Lance mínimo diverge: planilha {fmt_valor(bem.lance_minimo)} × edital {fmt_valor(min_ed)} (usando {fonte}).")
     pct = parse_valor((lote.percentual_2o_leilao or "").replace("%", ""))
+    if bem.tipo != "outro" and lote.tipo_bem != bem.tipo:
+        aviso("alerta", f"Tipo do bem: planilha diz {bem.tipo}, IA leu {lote.tipo_bem} (vale a planilha).")
     if pct and aval is not None and minimo is not None:
         esperado = (aval * pct / Decimal(100)).quantize(Decimal("0.01"))
         if abs(esperado - minimo) > Decimal("0.05"):
@@ -92,12 +95,12 @@ def valores(lote: LoteIA, bem: Bem, fonte: str = "planilha") -> tuple[dict[str, 
     return {"v1": fmt_valor(aval), "aval": fmt_valor(aval), "v2": fmt_valor(minimo)}, probs
 
 
-def ordenar(itens: list[tuple[LoteIA, Decimal]]) -> list[LoteIA]:
+def ordenar(itens: list[tuple[LoteIA, str, Decimal]]) -> list[LoteIA]:
     """Imóveis → veículos → demais; dentro do tipo, avaliação maior → menor, com bens do mesmo
     processo juntos na posição do maior deles."""
     grupos: dict[tuple[int, str], list[tuple[LoteIA, Decimal]]] = {}
-    for lote, aval in itens:
-        tipo = ORDEM_TIPO.get(lote.tipo_bem, 2)
+    for lote, tipo_bem, aval in itens:
+        tipo = ORDEM_TIPO.get(tipo_bem, 2)
         grupos.setdefault((tipo, normalizar_processo(lote.processo)), []).append((lote, aval))
     for g in grupos.values():
         g.sort(key=lambda x: x[1], reverse=True)
@@ -105,7 +108,8 @@ def ordenar(itens: list[tuple[LoteIA, Decimal]]) -> list[LoteIA]:
     return [lote for k in chaves for lote, _ in grupos[k]]
 
 
-def problemas_do_lote(lote: LoteIA) -> list[Problema]:
+def problemas_do_lote(lote: LoteIA, tipo_bem: str | None = None) -> list[Problema]:
+    tipo_bem = tipo_bem or lote.tipo_bem
     probs = []
 
     def p(nivel: str, msg: str) -> None:
@@ -113,7 +117,7 @@ def problemas_do_lote(lote: LoteIA) -> list[Problema]:
 
     if len(lote.titulo) > LIMITE_TITULO:
         p("erro", f"Título com {len(lote.titulo)} caracteres (máx. {LIMITE_TITULO}): “{lote.titulo}”.")
-    if lote.tipo_bem == "imovel":
+    if tipo_bem == "imovel":
         faltam = [n for n, v in (("Incra", lote.incra), ("CRI/matrícula", lote.cri)) if not v]
         if faltam:
             p("alerta", f"Imóvel sem {' e '.join(faltam)} no edital (cadastrado sem esse número).")

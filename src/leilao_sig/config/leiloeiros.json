@@ -11,6 +11,7 @@
     {"nome": "Rodrigo Aparecido Rigolon da Silva", "apelidos": ["Rodrigo Aparecido Rigolon da Silva", "Rodrigo Rigolon", "rigolonleiloes"], "site": "rigolonleiloes", "telefone_0800": "0800 500 9968", "horario_ciclos": "16:00", "venda_direta": true},
     {"nome": "Alessandro de Assis Teixeira", "apelidos": ["Alessandro de Assis Teixeira", "Alessandro Teixeira", "alessandroteixeiraleiloes"], "site": "alessandroteixeiraleiloes", "telefone_0800": "0800 500 9910", "horario_ciclos": "16:00", "venda_direta": true},
     {"nome": "José Antônio Rodovalho Júnior", "apelidos": ["José Antônio Rodovalho Júnior", "Jose Antonio Rodovalho Junior", "joserodovalholeiloes"], "site": "joserodovalholeiloes", "telefone_0800": "0800 500 9949", "horario_ciclos": "16:00", "venda_direta": true},
+    {"nome": "Paulo Cézar Rocha Teixeira", "apelidos": ["Paulo Cézar Rocha Teixeira", "Paulo Cezar Rocha Teixeira", "leiloesjudiciaisbahia"], "site": "leiloesjudiciaisbahia", "telefone_0800": "0800 500 9961", "horario_ciclos": "16:00", "venda_direta": true},
     {"nome": "Thaís Costa Bastos Teixeira", "apelidos": ["Thaís Costa Bastos Teixeira", "Thais Costa Bastos Teixeira", "thaisteixeiraleiloes"], "site": "thaisteixeiraleiloes", "telefone_0800": "0800 500 9970", "horario_ciclos": "16:00", "venda_direta": true}
   ]
 }

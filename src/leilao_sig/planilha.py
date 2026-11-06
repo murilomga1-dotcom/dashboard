@@ -43,6 +43,79 @@ class Bem:
         return (self.processo_digitos, self.vistoria)
 
 
+# Tipo da planilha -> (tipo interno, aba do modal "Selecione a vistoria" no SIG)
+TIPOS = {"imovel": ("imovel", "Imóveis"), "veiculo": ("veiculo", "Veículos"), "equipamento": ("equipamento", "Equipamentos")}
+
+
+def tipo_normalizado(tipo: str) -> str:
+    t = sem_acento(tipo)
+    for chave in TIPOS:
+        if t.startswith(chave):
+            return chave
+    return "outro"
+
+
+@dataclass(frozen=True)
+class Grupo:
+    """Uma vistoria = um lote no SIG. Pode reunir várias linhas (vários bens) da planilha,
+    e o valor do lote é a soma delas (ex.: 3 equipamentos avaliados juntos em R$ 26.000,00)."""
+
+    processo: str
+    processo_digitos: str
+    vistoria: str
+    tipo: str  # imovel | veiculo | equipamento | outro
+    bens: tuple[Bem, ...]
+
+    @property
+    def chave(self) -> tuple[str, str]:
+        return (self.processo_digitos, self.vistoria)
+
+    @property
+    def linhas(self) -> str:
+        return ", ".join(str(b.linha) for b in self.bens)
+
+    @property
+    def aba_sig(self) -> str:
+        return TIPOS.get(self.tipo, ("", ""))[1]
+
+    def _soma(self, campo: str) -> Decimal | None:
+        valores = [getattr(b, campo) for b in self.bens]
+        return None if any(v is None for v in valores) else sum(valores, Decimal("0.00"))
+
+    @property
+    def avaliacao(self) -> Decimal | None:
+        return self._soma("avaliacao")
+
+    @property
+    def lance_minimo(self) -> Decimal | None:
+        return self._soma("lance_minimo")
+
+
+def agrupar(bens: list[Bem]) -> tuple[list[Grupo], list[str]]:
+    """Junta as linhas pela chave processo + vistoria, na ordem em que aparecem."""
+    por_chave: dict[tuple, list[Bem]] = {}
+    for b in bens:
+        por_chave.setdefault(b.chave, []).append(b)
+    grupos, avisos = [], []
+    for linhas in por_chave.values():
+        tipos = {tipo_normalizado(b.tipo) for b in linhas}
+        if len(tipos) > 1:
+            avisos.append(
+                f"Vistoria {linhas[0].vistoria}: linhas {', '.join(str(b.linha) for b in linhas)} com tipos diferentes "
+                f"({', '.join(sorted({b.tipo for b in linhas}))})."
+            )
+        grupos.append(Grupo(linhas[0].processo, linhas[0].processo_digitos, linhas[0].vistoria,
+                            tipo_normalizado(linhas[0].tipo), tuple(linhas)))
+    # a mesma vistoria em processos diferentes é quase sempre erro de digitação
+    por_vistoria: dict[str, set] = {}
+    for g in grupos:
+        por_vistoria.setdefault(g.vistoria, set()).add(g.processo)
+    for v, procs in por_vistoria.items():
+        if len(procs) > 1:
+            avisos.append(f"Vistoria {v} aparece em processos diferentes: {', '.join(sorted(procs))}.")
+    return grupos, avisos
+
+
 def normalizar_processo(p: object) -> str:
     """Só os dígitos: '0001234-56.2023.8.12.0001' e '00012345620238120001' viram iguais."""
     return so_digitos(p)
@@ -93,13 +166,6 @@ def ler_planilha(caminho: str | Path) -> tuple[list[Bem], list[str]]:
             lance_minimo=minimo,
             descricao=str(col("descricao") or "").strip(),
         ))
-    vistos: dict[tuple, int] = {}
-    for b in bens:
-        if b.chave in vistos:
-            avisos.append(
-                f"Linha {b.linha}: processo {b.processo} + vistoria {b.vistoria} repetidos (já na linha {vistos[b.chave]})."
-            )
-        vistos.setdefault(b.chave, b.linha)
     if not bens:
         avisos.append("Nenhuma linha com Nº Vistoria preenchido.")
     return bens, avisos

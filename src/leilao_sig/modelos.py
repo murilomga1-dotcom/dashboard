@@ -114,6 +114,7 @@ class LotePreparado:
     vistoria: str
     chave_vistoria: str
     tipo_bem: str
+    aba_sig: str  # aba do modal "Selecione a vistoria": Imóveis / Veículos / Equipamentos
     titulo: str
     html: str
     v1: str  # Inicial 1º leilão (= avaliação)

@@ -10,7 +10,7 @@ import anthropic
 
 from leilao_sig import config
 from leilao_sig.modelos import ExtracaoEdital
-from leilao_sig.planilha import Bem
+from leilao_sig.planilha import Bem, agrupar
 from leilao_sig.util import fmt_valor
 
 log = logging.getLogger(__name__)
@@ -55,16 +55,22 @@ def cliente() -> anthropic.Anthropic:
 
 
 def _planilha_para_texto(bens: list[Bem]) -> str:
+    """Uma entrada por vistoria (= um lote no SIG), com os bens e a soma dos valores."""
+    grupos, _ = agrupar(bens)
+
+    def v(x):
+        return fmt_valor(x) if x is not None else None
+
     linhas = [
         {
-            "processo": b.processo,
-            "vistoria": b.vistoria,
-            "tipo": b.tipo,
-            "avaliacao": fmt_valor(b.avaliacao) if b.avaliacao is not None else None,
-            "lance_minimo": fmt_valor(b.lance_minimo) if b.lance_minimo is not None else None,
-            "descricao": b.descricao,
+            "processo": g.processo,
+            "vistoria": g.vistoria,
+            "tipo": g.bens[0].tipo,
+            "avaliacao_total": v(g.avaliacao),
+            "lance_minimo_total": v(g.lance_minimo),
+            "bens": [{"descricao": b.descricao, "avaliacao": v(b.avaliacao)} for b in g.bens],
         }
-        for b in bens
+        for g in grupos
     ]
     return json.dumps(linhas, ensure_ascii=False, indent=1)
 

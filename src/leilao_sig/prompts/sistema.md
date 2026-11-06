@@ -47,11 +47,14 @@ substitui. Frases por tribunal/cliente usam `tipo = "tribunal"`; frase de exceç
 
 ## Lotes
 
-Um item em `lotes` por lote do edital. Siga o manual "Lotes" abaixo para título e descrição, com
+Um item em `lotes` por lote do edital. Na planilha, cada vistoria é um lote no SIG e pode
+reunir vários bens (ex.: três equipamentos do mesmo processo avaliados juntos): nesse caso o
+lote do edital também reúne esses bens, o título segue o modelo "vários bens" do manual e o
+resumo descreve todos eles. Siga o manual "Lotes" abaixo para título e descrição, com
 estas regras que **prevalecem** sobre o manual:
 
-- `vistoria_planilha`: o Nº Vistoria da linha da planilha que corresponde a este bem (mesmo
-  processo; quando o processo tiver mais de um bem, compare as descrições). Nulo se não houver
+- `vistoria_planilha`: o Nº Vistoria da entrada da planilha que corresponde a este lote (mesmo
+  processo; quando o processo tiver mais de uma vistoria, compare as descrições). Nulo se não houver
   linha correspondente ou se não der para ter certeza — nunca chute.
 - `titulo`: no máximo 56 caracteres, formato do manual. Metragem nunca abreviada nem arredondada.
 - `resumo`: 1–2 frases, caixa normal. Metragens e valores exatamente como no edital. Em imóveis,
