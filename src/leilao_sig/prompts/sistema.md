@@ -30,9 +30,10 @@ preencha com os do primeiro edital e explique a divergência em `alertas` (o sis
 
 - `titulo_leilao`: `JUSTIÇA ESTADUAL DE CIDADE/UF - VARA` (JT: `JUSTIÇA DO TRABALHO ...`;
   JF: `JUSTIÇA FEDERAL ...`), em maiúsculas, com a vara como está no edital. O título segue a
-  vara, mesmo se o bem estiver em outra cidade (nesse caso, alerte). Se os editais forem de
-  varas diferentes, use a parte comum (ex.: `JUSTIÇA ESTADUAL DE SALVADOR/BA - JUIZADOS ESPECIAIS`)
-  e alerte para a equipe conferir.
+  vara, mesmo se o bem estiver em outra cidade (nesse caso, alerte). Com vários editais,
+  use a vara do primeiro: o sistema junta as varas de todos os editais no título.
+  Em `editais[].vara`, copie a vara de cada edital como está nele (ex.: `1ª VARA DO SISTEMA DOS
+  JUIZADOS ESPECIAIS DE CAUSAS COMUNS`).
 - `uf`: sigla da UF da comarca. `distrito_federal`: true só para JE/TJDFT.
 - `leiloeiro_nome` exatamente como no edital; `leiloeiro_site` como `www.exemplo.com.br`.
 - `leilao_1` e `leilao_2`: datas `dd/mm/aaaa` e horas `HH:MM`, como estão no edital (não converta

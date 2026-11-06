@@ -151,10 +151,11 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], textos: list
         blocos = [Bloco(tipo=b.tipo, texto=b.texto.replace("{0800}", tel)) for b in blocos]
 
     datas = [montagem.linhas_datas(1, ini1, (dt1, h1)), montagem.linhas_datas(2, ini2, (dt2, h2))]
-    html = montagem.cabecalho_html(ext.titulo_leilao, datas, mod_ciclos.linhas_venda_direta(lista_ciclos), blocos)
+    titulo = titulo_leilao(ext)
+    html = montagem.cabecalho_html(titulo, datas, mod_ciclos.linhas_venda_direta(lista_ciclos), blocos)
     site = leiloeiro.site or sem_acento(ext.leiloeiro_site).replace("https://", "").replace("http://", "").replace("www.", "").split(".")[0]
     prep.cabecalho = CabecalhoPreparado(
-        site=site, titulo=ext.titulo_leilao, fuso=fuso, dt1=dt1, h1=h1, dt2=dt2, h2=h2, html=html,
+        site=site, titulo=titulo, fuso=fuso, dt1=dt1, h1=h1, dt2=dt2, h2=h2, html=html,
         ciclos=lista_ciclos, leiloeiro=leiloeiro.nome, venda_direta_cadastrada=bool(lista_ciclos),
     )
     prep.problemas += [Problema("alerta", f"IA: {a}") for a in ext.alertas]
@@ -186,6 +187,20 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], textos: list
     for i, lote in enumerate(mod_lotes.ordenar(para_ordenar), start=1):
         preparados[id(lote)].ordem = i
     prep.lotes = sorted(preparados.values(), key=lambda l: l.ordem)
+
+
+def titulo_leilao(ext: ExtracaoEdital) -> str:
+    """Um edital (ou todos da mesma vara): o título da IA. Varas diferentes: todas no título,
+    na ordem dos editais e sem repetir: JUSTIÇA ESTADUAL DE CIDADE/UF - 1ª VARA ... / 2ª VARA ..."""
+    varas: list[str] = []
+    for e in ext.editais:
+        v = " ".join(e.vara.split()).upper()
+        if v and all(sem_acento(v) != sem_acento(x) for x in varas):
+            varas.append(v)
+    if len(varas) <= 1:
+        return ext.titulo_leilao
+    prefixo = ext.titulo_leilao.split(" - ")[0].strip()
+    return f"{prefixo} - {' / '.join(varas)}"
 
 
 def _conferir_editais(ext: ExtracaoEdital, leiloeiro, datas: tuple[str, str, str, str]) -> None:

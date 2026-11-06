@@ -101,6 +101,15 @@ def test_sessao_com_dois_editais(tmp_path):
     assert not prep.bloqueado, prep.problemas
     assert [n for n, _ in chamadas[0][0]] == ["edital.docx", "edital2.docx"]  # uma chamada com os dois
     assert len(prep.editais) == 2 and prep.lotes[0].arquivo_edital == "edital2.docx"
+    # varas diferentes: todas no título, sem repetir
+    assert prep.cabecalho.titulo == "JUSTIÇA ESTADUAL DE CAMPO GRANDE/MS - 1ª VARA CÍVEL / 2ª VARA"
+    assert prep.cabecalho.html.startswith("<p><strong>JUSTIÇA ESTADUAL DE CAMPO GRANDE/MS - 1ª VARA CÍVEL / 2ª VARA</strong>")
+
+
+def test_titulo_mesma_vara_nao_repete():
+    from leilao_sig.preparar import titulo_leilao
+    ext = fabrica.extracao(editais=[fabrica.info_edital("a.pdf", vara="1ª Vara Cível"), fabrica.info_edital("b.pdf", vara="1ª VARA CIVEL")])
+    assert titulo_leilao(ext) == "JUSTIÇA ESTADUAL DE CAMPO GRANDE/MS - 1ª VARA CÍVEL"
 
 
 def test_sessao_com_datas_diferentes_bloqueia(tmp_path):

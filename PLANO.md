@@ -94,9 +94,8 @@ edital está lá: vistoria 13816, 3 linhas, total R$ 26.000,00 / R$ 20.800,00 �
 - Um edital fora do padrão na sessão → bloqueia o leilão inteiro (conservador).
 - Horário dos ciclos: padrão do leiloeiro (16:00), exceto os que já têm outro horário na tabela.
 
-## Pendências
-
-- Título do leilão quando os editais são de varas diferentes (hoje: a IA usa a parte comum e alerta).
+- Título com varas diferentes: todas as varas no título, na ordem dos editais, sem repetir
+  (`JUSTIÇA ESTADUAL DE CIDADE/UF - 1ª VARA ... / 2ª VARA ...`), montado pelo código.
 - O SIG tem API ou importação por planilha? (seria mais estável que automatizar a tela)
 - Quantos PCs vão usar? (se mais de um, o registro anti-duplicidade precisa ser compartilhado)
 - Calendário 2027/2028: feriados e recesso além da tabela atual.
