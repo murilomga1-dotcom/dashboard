@@ -1,0 +1,93 @@
+# Cabeçalho — ordem, frases e HTML (editais judiciais comuns)
+
+Texto em MAIÚSCULAS. Só os blocos aplicáveis, nesta ordem. (Senad, Caixa, Alienações MS e Giordano → skill cabecalho-leilao.)
+
+## Ordem dos blocos
+
+1. **Título**: `JUSTIÇA ESTADUAL DE CIDADE/UF - VARA` (JT: `JUSTIÇA DO TRABALHO ...`; JF: `JUSTIÇA FEDERAL ...`). A vara como está no edital. O título segue a vara, mesmo se o bem estiver em outra cidade (avisar).
+2. **Datas**:
+   - Só encerramentos: `1º ENCERRAMENTO DIA DD/MM/AAAA ÀS HH:MM HORAS` / `2º ENCERRAMENTO DIA DD/MM/AAAA ÀS HH:MM HORAS`
+   - Com início: `1º LEILÃO (INÍCIO): DD/MM/AAAA A PARTIR DAS HH:MM HORAS | 1º ENCERRAMENTO: DD/MM/AAAA ÀS HH:MM HORAS` (idem 2º). "Inicia às X, aberto por N minutos" → encerramento = X + N (avisar).
+3. **Venda direta** (não entra para Joyce Ribeiro nem Bruno Meireles; nesses leilões a venda direta também não é cadastrada na aba Datas): `VENDA DIRETA:` + uma linha por ciclo `Nº CICLO DIA DD/MM/AAAA C/ ENCERRAMENTO ÀS HH:MM HORAS` + as frases de recesso (ver datas-horarios.md).
+4. **Participação**:
+   - Só eletrônico: PARA PARTICIPAÇÃO E OFERTA DE LANCES ELETRÔNICOS, OS INTERESSADOS DEVERÃO FAZER CADASTRO PRÉVIO NO SITE www.SITE.com.br. ORIENTAMOS REALIZAR O CADASTRO E O ENVIO DA DOCUMENTAÇÃO NECESSÁRIA COM NO MÍNIMO 24 HORAS DE ANTECEDÊNCIA, EVITANDO ASSIM, PROBLEMAS NA LIBERAÇÃO.
+   - Presencial + eletrônico: PARA PARTICIPAÇÃO E OFERTA DE LANCES OS INTERESSADOS DEVERÃO COMPARECER NO LOCAL, NO DIA E HORÁRIO MENCIONADO, OU DEVERÃO FAZER CADASTRO PRÉVIO NO SITE www.SITE.com.br. ORIENTAMOS REALIZAR O CADASTRO E O ENVIO DA DOCUMENTAÇÃO NECESSÁRIA COM NO MÍNIMO 24 HORAS DE ANTECEDÊNCIA, EVITANDO ASSIM, PROBLEMAS NA LIBERAÇÃO.
+   - Antecedência diferente no edital → usar a do edital.
+5. **Direito de preferência** (se o edital tratar): DIREITO DE PREFERÊNCIA: PARA QUE QUEM TIVER DIREITO (ART. 892 § 2º E 3º, 843 § 2º, AMBOS DO CÓDIGO PROCESSO CIVIL) POSSA EXERCER O DIREITO DE PREFERÊNCIA DOS BENS LEILOADOS, DEVERÃO, DE MODO PRÉVIO, CADASTRAR-SE E SOLICITAR HABILITAÇÃO NO SITE www.SITE.com.br. AO EFETUAR O CADASTRO E HABILITAÇÃO, INFORMAR A CONDIÇÃO DE PREFERÊNCIA DO BEM, PARA PODER, SE QUISER, EXERCER REFERIDO DIREITO.
+6. **Valor mínimo** (uma):
+   - NO 1º LEILÃO O LANCE MÍNIMO É IGUAL OU SUPERIOR AO VALOR DA AVALIAÇÃO, NO 2º LEILÃO É MENOR, CONFORME ABAIXO.
+   - NO 1º LEILÃO O LANCE MÍNIMO É SUPERIOR AO VALOR DA AVALIAÇÃO, NO 2º LEILÃO É MENOR, CONFORME ABAIXO.
+   - NO 1º E 2º LEILÃO SERÃO ACEITOS LANCES INFERIORES À AVALIAÇÃO.
+   - Com exceção: ...CONFORME ABAIXO, COM EXCEÇÃO DO LOTE XXX, QUE NÃO PODERÁ SER VENDIDO POR VALOR INFERIOR AO DA AVALIAÇÃO.
+7. **Exceções do lote** (se houver):
+   - **Meação / cota-parte** (art. 843): usar a frase só quando o edital citar o nome do coproprietário e/ou a porcentagem reservada; sem nenhum dos dois, não usar. Cota-parte/meação: O LANCE MÍNIMO DO LOTE XXX FOI CALCULADO CONSIDERANDO OS TERMOS DO ART. 843, DO CPC/2015, OU SEJA, RESERVANDO A COTA PARTE DO COPROPRIETÁRIO OU CÔNJUGE ALHEIO À EXECUÇÃO. (+ "SOBRE A COTA PARTE NÃO SE APLICA PARCELAMENTO." se for o caso)
+   - Box de garagem: O LOTE XXX SE ENQUADRA NO ART. 1.331, § 1º, DO CÓDIGO CIVIL, OU SEJA, EM SE TRATANDO DE BOX DE GARAGEM SITUADOS DENTRO DE UM CONDOMÍNIO, A ALIENAÇÃO FICARÁ RESTRITA AOS CONDÔMINOS DO REFERIDO EDIFÍCIO.
+   - Lotes iguais: OS LOTES XXX E YYY SÃO IGUAIS, DESSE MODO, COM A VENDA DE UM DOS LOTES O OUTRO SERÁ "FECHADO" PARA LANCES.
+   - Lance condicional (ex.: JT Juiz de Fora/MG): NO 2º LEILÃO SERÃO ACEITOS LANCES A PARTIR DE 40% DA AVALIAÇÃO. CASO O BEM ALCANCE OFERTA DE 60% DA AVALIAÇÃO, O LANCE SERÁ AUTOMATICAMENTE ACEITO E A VENDA CONCRETIZADA. SE O LANCE ATINGIR O VALOR ENTRE 40% E 59% ESTARÁ CONDICIONADO A LIBERAÇÃO PELO JUÍZO (LANCE CONDICIONAL).
+   - Alto valor (imóvel ≥ R$ 2 milhões, combustível, armas, sucatas): ATENÇÃO P/ OS LOTES COM O ÍCONE DE CADEADO. ESSES LOTES NECESSITAM DE HABILITAÇÃO ESPECIAL QUE SÓ É CONCEDIDA APÓS A LIBERAÇÃO MANUAL DA EQUIPE DO(A) LEILOEIRO(A), PARA ISSO É NECESSÁRIO QUE O(A) INTERESSADO(A) LIGUE P/ 0800 DO LEILOEIRO. (texto completo do termo: skill cabecalho-leilao)
+8. **Parcelamento** — SÓ se o edital tiver seção de parcelamento com condições:
+   - O IMÓVEL/O BEM/O VEÍCULO PODERÁ SER PARCELADO COM ENTRADA DE XX% E O RESTANTE EM ATÉ XX MESES, OBSERVANDO-SE ALGUMAS CONDIÇÕES, CONSULTE O EDITAL. (plural: OS IMÓVEIS PODERÃO SER PARCELADOS...)
+   - Alternativa art. 895: NOS TERMOS DO ARTIGO 895 DO NOVO CPC, OS INTERESSADOS PODERÃO APRESENTAR PROPOSTA DE PARCELAMENTO COM ENTRADA DE 25% E O RESTANTE EM ATÉ 30 VEZES, OBSERVANDO-SE ALGUMAS CONDIÇÕES, CONSULTE-NOS.
+   - **JE DF (TJDFT), sempre**, mesmo sem seção de parcelamento: NOS TERMOS DO ARTIGO 895 DO CÓDIGO DE PROCESSO CIVIL, OS INTERESSADOS PODERÃO APRESENTAR PROPOSTA DE PARCELAMENTO ATÉ O INÍCIO DO PRIMEIRO LEILÃO, POR VALOR NÃO INFERIOR AO DA AVALIAÇÃO, E ATÉ O INÍCIO DO SEGUNDO LEILÃO, POR VALOR NÃO INFERIOR AO PREÇO VIL. AS PROPOSTAS DEVERÃO SER ENVIADAS EXCLUSIVAMENTE PARA O E-MAIL: CONTATO@LEILOESJUDICIAIS.COM.BR. APÓS O ENVIO, O PROPONENTE DEVERÁ ENTRAR EM CONTATO COM A CENTRAL DE ATENDIMENTO ATRAVÉS DO 0800 XXX XXXX PARA RECEBER AS ORIENTAÇÕES COMPLEMENTARES SOBRE O PROCEDIMENTO DA PROPOSTA.
+   - Sem seção de parcelamento: omitir parcelamento E a frase à vista × parcelado (avisar se a comissão citar parcelas).
+9. **À vista × parcelado** (com parcelamento):
+   - **CPC MISTO (padrão** — à vista tem preferência sem bloquear parcelados, ex.: "o que não interfere na continuidade da disputa", "§ 7º do art. 895"): LANCES À VISTA TERÃO PREFERÊNCIA, BASTANDO IGUALAR AO VALOR DO ÚLTIMO LANCE OFERTADO, O QUE NÃO INTERFERE NA CONTINUIDADE DA DISPUTA. O LANCE A PRAZO TEM DE SUPERAR O LANCE ANTERIOR, JÁ O LANCE À VISTA BASTA IGUALAR-SE AO ÚLTIMO LANCE A PRAZO E TERÁ PREFERÊNCIA.
+   - **CPC** (só se o edital disser que o à vista bloqueia/encerra os parcelados): A DISPUTA PARA LANCES A PRAZO SERÁ ENCERRADA BASTANDO UM LANCE À VISTA IGUAL OU SUPERIOR AO ÚLTIMO LANCE OFERTADO, DE MODO QUE A DISPUTA PERMANECERÁ ABERTA APENAS ENTRE OS LANCES À VISTA.
+   - LIVRE (maior lance vence) e TRT (disputa entre parcelas): sem frase; informar o tipo em "Para conferir".
+   - Veículos/móveis parcelados: EM CASO DE ARREMATAÇÃO PARCELADA DE VEÍCULOS/MÓVEIS, A CARTA DE ARREMATAÇÃO E/OU MANDADO DE ENTREGA, ESTARÁ CONDICIONADO A QUITAÇÃO DE TODAS AS PARCELAS. CASO O ARREMATANTE QUEIRA OFERECER CAUÇÃO IDÔNEA PARA LIBERAÇÃO DO BEM, DEPENDERÁ DA ACEITAÇÃO PELO JUIZ. (EXEMPLO DE CAUÇÃO IDÔNEA: SEGURO GARANTIA, FIANÇA BANCÁRIA OU IMÓVEL EM NOME DO ARREMATANTE, COM VALOR DECLARADO IGUAL OU SUPERIOR A 03 VEZES O VALOR DA ARREMATAÇÃO).
+10. **Lote unificado** (art. 893): ATENÇÃO! PARA OS PROCESSOS COM VÁRIOS BENS, NO LEILÃO TERÁ PREFERÊNCIA AQUELE QUE SE PROPUSER A ARREMATÁ-LOS TODOS, EM CONJUNTO (ART. 893 DO CPC). CASO O LOTE ENGLOBADO NÃO RECEBA LANCE NO LEILÃO, OS LOTES DESMEMBRADOS SERÃO ABERTOS EM REPASSE, EM ATÉ 15 MINUTOS APÓS O ENCERRAMENTO DO PREGÃO DOS BENS, COM DURAÇÃO PREVISTA DE 01:00 HORA.
+11. **Repasse** (singular/plural conforme nº de bens): O BEM NÃO ARREMATADO, SERÁ DISPONIBILIZADO NOVAMENTE EM REPASSE, EM ATÉ 15 MINUTOS APÓS O ENCERRAMENTO DO 2º LEILÃO, COM DURAÇÃO DE 01:00 HORA. (plural: OS BENS NÃO ARREMATADOS, SERÃO DISPONIBILIZADOS...)
+12. **Escalonamento** (se houver): O ENCERRAMENTO DOS LOTES OCORRERÁ DE MODO ESCALONADO, COM 02 MINUTOS A MAIS PARA O LOTE SEGUINTE COM RELAÇÃO AO IMEDIATAMENTE ANTERIOR, E ASSIM SUCESSIVAMENTE ATÉ O ÚLTIMO LOTE.
+13. **Tipo de bem**:
+    - Veículos (sempre): NO CASO DE VEÍCULOS, A CIRCULAÇÃO É PERMITIDA APENAS COM A TRANSFERÊNCIA DO MESMO PARA A TITULARIDADE DO ARREMATANTE JUNTO AO DETRAN. O AUTO DE ARREMATAÇÃO E/OU CARTA DE ARREMATAÇÃO NÃO SERVEM COMO DOCUMENTO AUTORIZADOR DE CIRCULAÇÃO. O(A) LEILOEIRO(A) OFICIAL, COMITENTE/JUDICIÁRIO NÃO SE RESPONSABILIZAM POR QUAISQUER INFRAÇÕES OU DANOS DECORRENTES DA INTEMPESTIVA UTILIZAÇÃO DO VEÍCULO.
+    - Sucata: PARA ARREMATAR VEÍCULOS EM ESTADO DE SUCATA O ARREMATANTE DEVERÁ TER REGISTRO JUNTO AO DETRAN, CONFORME DETERMINAÇÃO DA LEI 12.977 DE 20/05/2014 E RESOLUÇÃO 611/2016 DO CONTRAN.
+    - Combustível: PARA ARREMATAR COMBUSTÍVEIS O ARREMATANTE DEVERÁ COMPROVAR CAPACIDADE PARA TRANSPORTAR E ARMAZENAR O BEM CONFORME NORMAS TÉCNICAS EXIGIDAS PELOS ÓRGÃOS/AGÊNCIAS COMPETENTES, CONSULTE-NOS.
+    - Armas: TRATANDO-SE DE LEILÃO DE ARMAS DE FOGO, O ARREMATANTE DEVERÁ APRESENTAR ANTECIPADAMENTE: I - ALVARÁ DE AUTORIZAÇÃO DE COMPRA DE ARMAS E MUNIÇÕES, EXPEDIDO PELO DEPARTAMENTO DE POLÍCIA FEDERAL; II - ALVARÁ DE FUNCIONAMENTO VÁLIDO (SE PESSOA JURÍDICA), COMPROVANDO TRATAR-SE DE EMPRESA COM NECESSIDADE OPERACIONAL PARA AQUISIÇÃO DE ARMAS;
+    - Imóvel rural: PARA OS INTERESSADOS NO IMÓVEL RURAL, CERTIFIQUE-SE ONDE É O IMÓVEL, O USO DA TERRA, TOPOGRAFIA, BENFEITORIAS, QUEM UTILIZA O IMÓVEL E A QUE TÍTULO, VEJA ANTES DE OFERTAR SEU LANCE!
+    - Rural GO/TO: O BEM PODERÁ SER VISTORIADO PELOS INTERESSADOS. PARA ORIENTAÇÕES, CONTATAR A EQUIPE DO LEILOEIRO ATRAVÉS DO TELEFONE 0800 DO LEILOEIRO OU E-MAIL contato@leiloesjudiciais.com.br
+    - Depósito do leiloeiro: OS LOTES ** E ** ENCONTRAM-SE NO DEPÓSITO DO(A) LEILOEIRO(A) DISPONÍVEIS P/ VISITAÇÃO, CONSULTE-NOS.
+    - Visitação: OS BENS PODERÃO SER VISITADOS DE SEGUNDA À SEXTA-FEIRA DAS 08H ÀS 11H E DAS 13H ÀS 16H (HORÁRIO DE BRASÍLIA), MEDIANTE AGENDAMENTO PRÉVIO. CONSULTE-NOS.
+14. **Atualização da avaliação** (só se o edital prever atualização futura): O VALOR DA AVALIAÇÃO PODERÁ SER ATUALIZADO ATÉ A DATA DO LEILÃO.
+15. **Comissão** (só se o edital NÃO informar): A COMISSÃO DEVIDA AO LEILOEIRO SERÁ DE 5% (CINCO POR CENTO) SOBRE O VALOR DA ARREMATAÇÃO, NÃO SE INCLUINDO NO VALOR DO LANÇO (ART. 7 DA RESOLUÇÃO 236/2016 - CNJ), QUE SERÁ EFETUADA PELO ARREMATANTE NO PRAZO DE 24 HORAS DA REALIZAÇÃO DO LEILÃO.
+16. **Cronômetro** (minutos do edital): PARA LANCES DADOS NOS ÚLTIMOS MINUTOS DO ENCERRAMENTO, O CRONÔMETRO PRORROGARÁ EM 03 MINUTOS PARA DISPUTAS.
+17. **Sempre por último**: "CASO HAJA ALGUMA DIVERGÊNCIA ENTRE A FOTO E O BEM PENHORADO, FICA VALENDO O BEM CONSTANTE NA DESCRIÇÃO DO EDITAL"
+
+Por tribunal/cliente (quando for o caso):
+- JT Mineiros/GO: ATENÇÃO! O AUTO DE ARREMATAÇÃO DEVE SER ASSINADO NO MESMO DIA DO LEILÃO, SOB PENA DE NÃO HOMOLOGAÇÃO DA ARREMATAÇÃO.
+- Galvani: O HORÁRIO AGENDADO PARA O LEILÃO REFERE-SE AO HORÁRIO LOCAL DO ESTADO.
+- TRT7 Fortaleza/CE: Observação: Eventual lance do Usuário "PropostaExterna" servirá para divulgar proposta recebida por outro Leiloeiro Oficial, dando início ao prazo para que interessados apresentem ofertas superiores.
+- TJ/JE MS: PARA MAIS INFORMAÇÕES, LIGUE PARA (XX) XXXXX-XXXX — Cida Fixer (67) 98131-0528; Igor de Souza (67) 98151-0244; Ana Cláudia (67) 99264-2386; Carlo Ferrari (16) 99785-0058; Maria Fixer (67) 98170-2662.
+
+Ônus e restrições (RENAJUD, penhoras, hipoteca) vão na descrição do lote, não no cabeçalho.
+
+## 0800 por leiloeiro
+
+| Leiloeiro | Site | 0800 |
+|---|---|---|
+| Álvaro Sérgio Fuzo | alvaroleiloes | 0800 500 9913 |
+| José David Gonçalves de Melo | jdleiloes | 0800 500 9953 |
+| Rodrigo Aparecido Rigolon da Silva | rigolonleiloes | 0800 500 9968 |
+| Alessandro de Assis Teixeira | alessandroteixeiraleiloes | 0800 500 9910 |
+| Conceição Maria Fixer | mariafixerleiloes | 0800 500 9923 |
+| José Antônio Rodovalho Júnior | joserodovalholeiloes | 0800 500 9949 |
+| Thaís Costa Bastos Teixeira | thaisteixeiraleiloes | 0800 500 9970 |
+| Giordano Bruno Coan Amador | giordanoleiloes | 0800 500 9947 |
+
+Fora da tabela: pegar do edital; sem 0800 no edital → `0800-***-***` e avisar.
+
+## HTML (descrição do leilão no TinyMCE)
+
+- Um `<p>` por bloco, `<p><br></p>` entre blocos; linhas do mesmo bloco com `<br>`.
+- Site em link: `<a href="https://www.site.com.br" target="_blank">www.site.com.br</a>`.
+- Vermelho `color: rgb(219, 42, 22)`; azul `color: rgb(11, 16, 198)`.
+
+| Bloco | Formatação |
+|---|---|
+| Título; linhas de encerramento; valor mínimo; veículos/móveis parcelados | `<strong>` |
+| Direito de preferência | só "DIREITO DE PREFERÊNCIA:" em `<strong>` |
+| Parcelamento | `<span style="color: rgb(219, 42, 22);"><strong>…</strong></span>` |
+| Repasse | `<span style="color: rgb(11, 16, 198);"><strong>…</strong></span>` |
+| Última frase ("CASO HAJA…") | `<span style="color: rgb(219, 42, 22);">…</span>` sem negrito |
+| Demais (venda direta, recesso, participação, à vista × parcelado, veículos, cronômetro etc.) | normal |
+
+Justificado + 10pt são aplicados pelos scripts (`leilao.js`, `lote.js`).

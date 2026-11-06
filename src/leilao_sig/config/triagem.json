@@ -1,0 +1,14 @@
+{
+  "_comentario": "Editais fora do padrão. 'bloqueios': o termo basta para o app avisar e não cadastrar. 'suspeitas': termos que também aparecem em editais comuns (ex.: depósito judicial na Caixa); só bloqueiam se a IA confirmar o tipo. Comparação sem maiúsculas/acentos.",
+  "bloqueios": {
+    "Senad": ["senad", "secretaria nacional de politicas sobre drogas"],
+    "Alienações MS": ["comissao de alienacao de bens apreendidos"],
+    "Giordano": ["giordano bruno coan amador", "giordanoleiloes"]
+  },
+  "suspeitas": {
+    "Caixa": ["caixa economica federal", "venda online caixa", "imoveis caixa"],
+    "Diário Oficial": ["diario oficial", "diario da justica eletronico"]
+  },
+  "max_editais_no_documento": 1,
+  "min_caracteres_por_pagina": 200
+}
