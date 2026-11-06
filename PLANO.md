@@ -7,7 +7,8 @@ e cadastra tudo sozinho no SIG (`sig.leiloesjudiciaisbrasil.com.br`).
 
 ## Entradas
 
-- Edital judicial comum (PDF, .docx ou .doc)
+- **Um ou mais editais** judiciais comuns (PDF, .docx ou .doc) — normalmente um por processo,
+  todos da mesma sessão. **Um leilão no SIG = a sessão inteira** (confirmado).
 - Planilha "Bens do Leilão" (colunas: Processo, Tipo do Bem, Nº Vistoria, ID Vistoria,
   Avaliação, Lance Mínimo, Descrição). Só entram as linhas com vistoria preenchida.
 
@@ -79,10 +80,23 @@ virou código testado, e a IA não calcula nada disso.
 - A planilha cobre uma sessão inteira ("JE Salvador/BA (Paulo) (tarde)", 16 processos), mas o
   processo do edital enviado (0056381-54.2016.8.05.0001) **não está nela**.
 
+Com a planilha certa (bens_leilao_8268.xlsx, "JE Salvador/BA (Paulo) (manhã)") o processo do
+edital está lá: vistoria 13816, 3 linhas, total R$ 26.000,00 / R$ 20.800,00 — igual ao edital.
+
+## Sessão com vários editais
+
+- Uma chamada à IA com todos os editais da sessão (cada um marcado pelo nome do arquivo).
+  A IA monta **um** cabeçalho (blocos sem repetir; regra que vale só para alguns bens vira
+  exceção citando o processo) e devolve também os fatos de cada edital.
+- O código confere que todos os editais têm o mesmo leiloeiro, os mesmos encerramentos e a
+  mesma venda direta (prazo e duração). Divergência → bloqueia (o SIG tem um cabeçalho e uma
+  aba Datas por leilão).
+- Um edital fora do padrão na sessão → bloqueia o leilão inteiro (conservador).
+- Horário dos ciclos: padrão do leiloeiro (16:00), exceto os que já têm outro horário na tabela.
+
 ## Pendências
 
-- Confirmar se a planilha é de outra sessão e como funciona a sessão: um edital por processo,
-  todos no mesmo leilão do SIG? Se sim, o app precisa aceitar vários editais + uma planilha.
+- Título do leilão quando os editais são de varas diferentes (hoje: a IA usa a parte comum e alerta).
 - O SIG tem API ou importação por planilha? (seria mais estável que automatizar a tela)
 - Quantos PCs vão usar? (se mais de um, o registro anti-duplicidade precisa ser compartilhado)
 - Calendário 2027/2028: feriados e recesso além da tabela atual.

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 
 def sem_acento(texto: str) -> str:
@@ -26,12 +26,14 @@ def fmt_data(d: date) -> str:
     return d.strftime("%d/%m/%Y")
 
 
-def parse_valor(valor: object) -> Decimal | None:
-    """Converte '68.000,00', 'R$ 68.000,00', 68000 ou 68000.0 em Decimal."""
+def parse_valor(valor: object, exato: bool = False) -> Decimal | None:
+    """Converte '68.000,00', 'R$ 68.000,00', 68000 ou 68000.0 em Decimal (centavos).
+    exato=True mantém as casas que vierem (a planilha tem lances como 12065,792)."""
     if valor is None or valor == "":
         return None
     if isinstance(valor, (int, float, Decimal)):
-        return Decimal(str(valor)).quantize(Decimal("0.01"))
+        d = Decimal(str(valor))
+        return d if exato else d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     t = re.sub(r"[^\d,.\-]", "", str(valor))
     if not t:
         return None
@@ -40,7 +42,8 @@ def parse_valor(valor: object) -> Decimal | None:
     elif t.count(".") > 1 or re.search(r"\.\d{3}$", t):  # "68.000" = sessenta e oito mil
         t = t.replace(".", "")
     try:
-        return Decimal(t).quantize(Decimal("0.01"))
+        d = Decimal(t)
+        return d if exato else d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     except InvalidOperation:
         return None
 

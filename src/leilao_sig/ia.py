@@ -75,8 +75,8 @@ def _planilha_para_texto(bens: list[Bem]) -> str:
     return json.dumps(linhas, ensure_ascii=False, indent=1)
 
 
-def extrair(texto_edital: str, bens: list[Bem], suspeitas: tuple[str, ...] = (), client: anthropic.Anthropic | None = None) -> tuple[ExtracaoEdital, dict]:
-    """Devolve (extração validada, uso de tokens)."""
+def extrair(editais: list[tuple[str, str]], bens: list[Bem], suspeitas: tuple[str, ...] = (), client: anthropic.Anthropic | None = None) -> tuple[ExtracaoEdital, dict]:
+    """editais = [(nome do arquivo, texto)], todos do mesmo leilão. Devolve (extração validada, uso de tokens)."""
     cfg = config.app()
     client = client or cliente()
     aviso = ""
@@ -85,14 +85,15 @@ def extrair(texto_edital: str, bens: list[Bem], suspeitas: tuple[str, ...] = (),
             "\n\nAtenção: o texto contém termos típicos de editais fora do padrão "
             f"({', '.join(suspeitas)}). Classifique `tipo_edital` com cuidado."
         )
+    blocos = "\n\n".join(f'<edital arquivo="{nome}">\n{texto}\n</edital>' for nome, texto in editais)
     conteudo = (
-        f"<edital>\n{texto_edital}\n</edital>\n\n"
+        f"{blocos}\n\n"
         f"<planilha_bens>\n{_planilha_para_texto(bens)}\n</planilha_bens>{aviso}"
     )
     try:
         with client.beta.messages.stream(
             model=cfg["modelo"],
-            max_tokens=64000,
+            max_tokens=128000,  # sessões com muitos editais/lotes
             system=[{"type": "text", "text": prompt_sistema(), "cache_control": {"type": "ephemeral"}}],
             messages=[{"role": "user", "content": conteudo}],
             thinking={"type": "adaptive"},

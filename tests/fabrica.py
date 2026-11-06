@@ -5,7 +5,7 @@ from pathlib import Path
 import docx
 import openpyxl
 
-from leilao_sig.modelos import Bloco, ExtracaoEdital, LoteIA, Pregao, VendaDireta
+from leilao_sig.modelos import Bloco, EditalInfo, ExtracaoEdital, LoteIA, Pregao, VendaDireta
 
 PROC_A = "0001234-56.2023.8.12.0001"
 PROC_B = "7002054-21.2020.8.22.0003"
@@ -38,7 +38,7 @@ def edital(caminho: Path, texto: str = "EDITAL DE LEILÃO\nJuízo da 1ª Vara C�
 
 def _lote(**kw) -> LoteIA:
     base = dict(
-        numero_no_edital="1", processo=PROC_A, vistoria_planilha="33578", tipo_bem="veiculo",
+        arquivo_edital="edital.docx", numero_no_edital="1", processo=PROC_A, vistoria_planilha="33578", tipo_bem="veiculo",
         titulo="Fiat/Uno Mille - 10/10 - Campo Grande/MS",
         resumo="Fiat/Uno Mille, ano 2010/2010, cor branca, placa ABC-1234",
         parcelamento=None, obs=None, frases=[], localizacao="Rua A, 100, Campo Grande/MS",
@@ -50,9 +50,25 @@ def _lote(**kw) -> LoteIA:
     return LoteIA(**base)
 
 
+def pregao(data: str, hora: str = "14:00") -> Pregao:
+    return Pregao(data_inicio=None, hora_inicio=None, data_encerramento=data, hora_encerramento=hora,
+                  duracao_minutos=None, trecho_edital=f"leilão {data}")
+
+
+def info_edital(arquivo: str = "edital.docx", **kw) -> EditalInfo:
+    base = dict(
+        arquivo=arquivo, tipo_edital="judicial_comum", motivo_tipo_edital="Edital judicial comum",
+        vara="1ª Vara Cível", leiloeiro_nome="Álvaro Sérgio Fuzo", processos=[PROC_A, PROC_B],
+        leilao_1=pregao("20/11/2026"), leilao_2=pregao("04/12/2026"),
+        venda_direta=VendaDireta(prazo_dias=60, duracao_ciclo_dias=15, horario_fixado_no_edital=None, trecho_edital="venda direta"),
+    )
+    base.update(kw)
+    return EditalInfo(**base)
+
+
 def extracao(**kw) -> ExtracaoEdital:
     base = dict(
-        tipo_edital="judicial_comum", motivo_tipo_edital="Edital judicial comum",
+        editais=[info_edital()],
         titulo_leilao="JUSTIÇA ESTADUAL DE CAMPO GRANDE/MS - 1ª VARA CÍVEL",
         comarca_cidade="Campo Grande", uf="MS", distrito_federal=False,
         leiloeiro_nome="Álvaro Sérgio Fuzo", leiloeiro_site="www.alvaroleiloes.com.br", telefone_0800_edital=None,

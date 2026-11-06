@@ -30,14 +30,14 @@ COR_ALERTA = QColor("#fff4d6")
 class _Trabalho(QObject):
     terminou = Signal(object, str)  # (Preparacao | None, pasta da execução ou mensagem de erro)
 
-    def __init__(self, edital: str, planilha: str):
+    def __init__(self, editais: list[str], planilha: str):
         super().__init__()
-        self.edital, self.planilha = edital, planilha
+        self.editais, self.planilha = editais, planilha
 
     def rodar(self) -> None:
         try:
             with Execucao() as ex:
-                prep = preparar(self.edital, self.planilha, execucao=ex)
+                prep = preparar(self.editais, self.planilha, execucao=ex)
             self.terminou.emit(prep, str(ex.pasta))
         except Exception as e:  # nunca derrubar a tela
             self.terminou.emit(None, f"{type(e).__name__}: {e}")
@@ -71,6 +71,7 @@ class Janela(QMainWindow):
         self.setWindowTitle(f"Cadastro de Leilões no SIG — v{__version__}")
         self.resize(1200, 800)
         self.prep: Preparacao | None = None
+        self.editais: list[str] = []
         self.pasta_execucao = ""
         self._thread: QThread | None = None
 
@@ -78,7 +79,7 @@ class Janela(QMainWindow):
         for campo in (self.campo_edital, self.campo_planilha):
             campo.setReadOnly(True)
         form = QFormLayout()
-        form.addRow("Edital (PDF/Word):", self._com_botao(self.campo_edital, "Escolher…", self._escolher_edital))
+        form.addRow("Editais da sessão (PDF/Word):", self._com_botao(self.campo_edital, "Escolher…", self._escolher_edital))
         form.addRow("Planilha Bens do Leilão:", self._com_botao(self.campo_planilha, "Escolher…", self._escolher_planilha))
 
         self.bt_preparar = QPushButton("Preparar com a IA")
@@ -97,7 +98,7 @@ class Janela(QMainWindow):
         botoes.addStretch()
         botoes.addWidget(self.bt_chave)
 
-        self.status = QLabel("Escolha o edital e a planilha.")
+        self.status = QLabel("Escolha os editais da sessão e a planilha.")
         self.status.setWordWrap(True)
 
         self.abas = QTabWidget()
@@ -117,7 +118,7 @@ class Janela(QMainWindow):
         lc.addWidget(sp)
         self.abas.addTab(cab, "Cabeçalho e datas")
         lot = QSplitter(Qt.Orientation.Vertical)
-        self.tab_lotes = _tabela(["Ordem", "Lote edital", "Processo", "Vistoria", "Aba no SIG", "Título", "Inicial 1º", "Avaliação", "Inicial 2º", "Situação"])
+        self.tab_lotes = _tabela(["Ordem", "Edital", "Lote edital", "Processo", "Vistoria", "Aba no SIG", "Título", "Inicial 1º", "Avaliação", "Inicial 2º", "Situação"])
         self.tab_lotes.itemSelectionChanged.connect(self._mostrar_lote)
         self.html_lote = QTextBrowser()
         lot.addWidget(self.tab_lotes)
@@ -143,9 +144,15 @@ class Janela(QMainWindow):
         return w
 
     def _escolher_edital(self) -> None:
-        c, _ = QFileDialog.getOpenFileName(self, "Edital", "", "Editais (*.pdf *.docx *.doc)")
-        if c:
-            self.campo_edital.setText(c)
+        cs, _ = QFileDialog.getOpenFileNames(self, "Editais do leilão (um ou vários)", "", "Editais (*.pdf *.docx *.doc)")
+        if cs:
+            self._definir_editais(cs)
+
+    def _definir_editais(self, caminhos: list[str]) -> None:
+        self.editais = caminhos
+        nomes = ", ".join(Path(c).name for c in caminhos)
+        self.campo_edital.setText(f"{len(caminhos)} edital(is): {nomes}")
+        self.campo_edital.setToolTip("\n".join(caminhos))
 
     def _escolher_planilha(self) -> None:
         c, _ = QFileDialog.getOpenFileName(self, "Planilha Bens do Leilão", "", "Planilhas (*.xlsx *.xlsm *.csv)")
@@ -162,14 +169,14 @@ class Janela(QMainWindow):
                 QMessageBox.warning(self, "Chave", f"Não foi possível salvar a chave: {e}")
 
     def _preparar(self) -> None:
-        edital, planilha = self.campo_edital.text(), self.campo_planilha.text()
-        if not (edital and planilha):
-            QMessageBox.warning(self, "Faltam arquivos", "Escolha o edital e a planilha.")
+        editais, planilha = self.editais, self.campo_planilha.text()
+        if not (editais and planilha):
+            QMessageBox.warning(self, "Faltam arquivos", "Escolha os editais e a planilha.")
             return
         self.bt_preparar.setEnabled(False)
-        self.status.setText("Lendo o edital e consultando a IA… (pode levar alguns minutos)")
+        self.status.setText(f"Lendo {len(editais)} edital(is) e consultando a IA… (pode levar alguns minutos)")
         self._thread = QThread()
-        self._trab = _Trabalho(edital, planilha)
+        self._trab = _Trabalho(editais, planilha)
         self._trab.moveToThread(self._thread)
         self._thread.started.connect(self._trab.rodar)
         self._trab.terminou.connect(self._terminou)
@@ -216,7 +223,7 @@ class Janela(QMainWindow):
             _preencher(self.tab_ciclos, [])
         _preencher(
             self.tab_lotes,
-            [[l.ordem, l.numero_no_edital, l.processo, l.vistoria, l.aba_sig or l.tipo_bem, l.titulo, l.v1, l.aval, l.v2,
+            [[l.ordem, l.arquivo_edital, l.numero_no_edital, l.processo, l.vistoria, l.aba_sig or l.tipo_bem, l.titulo, l.v1, l.aval, l.v2,
               "OK" if l.pode_gravar else "ERRO — será pulado"] for l in prep.lotes],
             [None if l.pode_gravar else COR_ERRO for l in prep.lotes],
         )
@@ -232,9 +239,9 @@ def main() -> None:
     app = QApplication(sys.argv)
     j = Janela()
     j.show()
-    if len(sys.argv) >= 3:  # atalho: leilao_sig <edital> <planilha>
-        j.campo_edital.setText(str(Path(sys.argv[1]).resolve()))
-        j.campo_planilha.setText(str(Path(sys.argv[2]).resolve()))
+    if len(sys.argv) >= 3:  # atalho: leilao_sig <edital> [<edital> ...] <planilha>
+        j._definir_editais([str(Path(a).resolve()) for a in sys.argv[1:-1]])
+        j.campo_planilha.setText(str(Path(sys.argv[-1]).resolve()))
     sys.exit(app.exec())
 
 

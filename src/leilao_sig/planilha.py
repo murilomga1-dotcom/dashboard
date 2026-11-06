@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 from dataclasses import dataclass
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from leilao_sig.util import parse_valor, sem_acento, so_digitos
@@ -47,12 +47,12 @@ class Bem:
 TIPOS = {"imovel": ("imovel", "Imóveis"), "veiculo": ("veiculo", "Veículos"), "equipamento": ("equipamento", "Equipamentos")}
 
 
+_PREFIXOS = {"imov": "imovel", "veic": "veiculo", "equip": "equipamento"}  # Imóvel/Imóveis, Veículo(s)...
+
+
 def tipo_normalizado(tipo: str) -> str:
-    t = sem_acento(tipo)
-    for chave in TIPOS:
-        if t.startswith(chave):
-            return chave
-    return "outro"
+    t = sem_acento(tipo).strip()
+    return next((v for k, v in _PREFIXOS.items() if t.startswith(k)), "outro")
 
 
 @dataclass(frozen=True)
@@ -80,7 +80,10 @@ class Grupo:
 
     def _soma(self, campo: str) -> Decimal | None:
         valores = [getattr(b, campo) for b in self.bens]
-        return None if any(v is None for v in valores) else sum(valores, Decimal("0.00"))
+        if any(v is None for v in valores):
+            return None
+        # soma exata e arredonda só o total (ex.: lances de 80% com 3 casas: 12065,792)
+        return sum(valores, Decimal("0")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @property
     def avaliacao(self) -> Decimal | None:
@@ -150,7 +153,7 @@ def ler_planilha(caminho: str | Path) -> tuple[list[Bem], list[str]]:
         if not processo:
             avisos.append(f"Linha {n}: vistoria {vistoria} sem número de processo — ignorada.")
             continue
-        aval, minimo = parse_valor(col("avaliacao")), parse_valor(col("lance_minimo"))
+        aval, minimo = parse_valor(col("avaliacao"), exato=True), parse_valor(col("lance_minimo"), exato=True)
         if aval is None:
             avisos.append(f"Linha {n}: vistoria {vistoria} sem avaliação.")
         if minimo is None:

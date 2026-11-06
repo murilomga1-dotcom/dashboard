@@ -7,13 +7,15 @@ from tests import fabrica
 HOJE = date(2026, 11, 6)
 
 
-def _rodar(tmp_path, ext, texto_edital=None):
-    ed = fabrica.edital(tmp_path / "edital.docx", *( [texto_edital] if texto_edital else []))
+def _rodar(tmp_path, ext, texto_edital=None, n_editais=1):
+    eds = [fabrica.edital(tmp_path / ("edital.docx" if i == 0 else f"edital{i + 1}.docx"), *([texto_edital] if texto_edital else []))
+           for i in range(n_editais)]
+    ed = eds if n_editais > 1 else eds[0]
     pl = fabrica.planilha(tmp_path / "bens.xlsx")
     chamadas = []
 
-    def falso(texto, bens, suspeitas):
-        chamadas.append((texto, bens, suspeitas))
+    def falso(editais, bens, suspeitas):
+        chamadas.append((editais, bens, suspeitas))
         return ext, {"entrada": 0, "saida": 0}
 
     with Execucao(tmp_path / "exec") as ex:
@@ -33,11 +35,13 @@ def test_fluxo_completo(tmp_path):
     assert all(l.pode_gravar for l in prep.lotes)
     assert prep.lotes[0].v2 == "150.000,00"
     assert (ex.pasta / "resposta_ia.json").exists() and (ex.pasta / "preparacao.json").exists()
-    assert "Edital" in (ex.pasta / "execucao.log").read_text(encoding="utf-8")
+    assert "1 edital(is)" in (ex.pasta / "execucao.log").read_text(encoding="utf-8")
 
 
 def test_joyce_sem_venda_direta(tmp_path):
-    prep, _, _ = _rodar(tmp_path, fabrica.extracao(leiloeiro_nome="Joyce Ribeiro", leiloeiro_site="www.jrleiloes.com.br"))
+    ext = fabrica.extracao(leiloeiro_nome="Joyce Ribeiro", leiloeiro_site="www.jrleiloes.com.br",
+                           editais=[fabrica.info_edital(leiloeiro_nome="Joyce Ribeiro")])
+    prep, _, _ = _rodar(tmp_path, ext)
     assert not prep.bloqueado
     assert prep.cabecalho.ciclos == [] and "VENDA DIRETA" not in prep.cabecalho.html
     assert any("regra do leiloeiro" in p.mensagem for p in prep.problemas)
@@ -50,7 +54,8 @@ def test_leiloeiro_desconhecido_bloqueia(tmp_path):
 
 
 def test_edital_fora_do_padrao_pela_ia(tmp_path):
-    prep, _, _ = _rodar(tmp_path, fabrica.extracao(tipo_edital="caixa", motivo_tipo_edital="Venda de imóveis da Caixa"))
+    ext = fabrica.extracao(editais=[fabrica.info_edital(tipo_edital="caixa", motivo_tipo_edital="Venda de imóveis da Caixa")])
+    prep, _, _ = _rodar(tmp_path, ext)
     assert prep.bloqueado and "fora do padrão" in prep.problemas[-1].mensagem
 
 
@@ -61,16 +66,17 @@ def test_senad_bloqueia_sem_chamar_ia(tmp_path):
 
 def test_data_passada_bloqueia(tmp_path):
     from leilao_sig.modelos import Pregao
-    ext = fabrica.extracao(leilao_1=Pregao(data_inicio=None, hora_inicio=None, data_encerramento="01/10/2026",
-                                           hora_encerramento="14:00", duracao_minutos=None, trecho_edital="x"))
+    ext = fabrica.extracao(leilao_1=fabrica.pregao("01/10/2026"),
+                           editais=[fabrica.info_edital(leilao_1=fabrica.pregao("01/10/2026"))])
     prep, _, _ = _rodar(tmp_path, ext)
     assert prep.bloqueado and "já passou" in prep.problemas[-1].mensagem
 
 
 def test_encerramento_por_duracao(tmp_path):
     from leilao_sig.modelos import Pregao
-    ext = fabrica.extracao(leilao_1=Pregao(data_inicio="20/11/2026", hora_inicio="13h", data_encerramento=None,
-                                           hora_encerramento=None, duracao_minutos=60, trecho_edital="x"))
+    p1 = Pregao(data_inicio="20/11/2026", hora_inicio="13h", data_encerramento=None,
+                hora_encerramento=None, duracao_minutos=60, trecho_edital="x")
+    ext = fabrica.extracao(leilao_1=p1, editais=[fabrica.info_edital(leilao_1=p1)])
     prep, _, _ = _rodar(tmp_path, ext)
     assert not prep.bloqueado
     assert prep.cabecalho.h1 == "14:00"
@@ -85,3 +91,31 @@ def test_erro_num_lote_nao_bloqueia_os_outros(tmp_path):
     ruins = [l for l in prep.lotes if not l.pode_gravar]
     assert [l.numero_no_edital for l in ruins] == ["2"]
     assert any("33579" in p.mensagem for p in prep.problemas)  # vistoria da planilha que sobrou
+
+
+def test_sessao_com_dois_editais(tmp_path):
+    ext = fabrica.extracao(editais=[fabrica.info_edital("edital.docx", processos=[fabrica.PROC_A]),
+                                    fabrica.info_edital("edital2.docx", vara="2ª Vara", processos=[fabrica.PROC_B])])
+    ext.lotes[2].arquivo_edital = "edital2.docx"
+    prep, chamadas, _ = _rodar(tmp_path, ext, n_editais=2)
+    assert not prep.bloqueado, prep.problemas
+    assert [n for n, _ in chamadas[0][0]] == ["edital.docx", "edital2.docx"]  # uma chamada com os dois
+    assert len(prep.editais) == 2 and prep.lotes[0].arquivo_edital == "edital2.docx"
+
+
+def test_sessao_com_datas_diferentes_bloqueia(tmp_path):
+    ext = fabrica.extracao(editais=[fabrica.info_edital("edital.docx"),
+                                    fabrica.info_edital("edital2.docx", leilao_2=fabrica.pregao("05/12/2026"))])
+    prep, _, _ = _rodar(tmp_path, ext, n_editais=2)
+    assert prep.bloqueado and "edital2.docx: encerramentos" in prep.problemas[-1].mensagem
+
+
+def test_sessao_com_venda_direta_diferente_bloqueia(tmp_path):
+    ext = fabrica.extracao(editais=[fabrica.info_edital("edital.docx"), fabrica.info_edital("edital2.docx", venda_direta=None)])
+    prep, _, _ = _rodar(tmp_path, ext, n_editais=2)
+    assert prep.bloqueado and "venda direta" in prep.problemas[-1].mensagem
+
+
+def test_ia_esqueceu_um_edital_bloqueia(tmp_path):
+    prep, _, _ = _rodar(tmp_path, fabrica.extracao(), n_editais=2)
+    assert prep.bloqueado and "edital2.docx" in prep.problemas[-1].mensagem

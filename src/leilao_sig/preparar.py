@@ -1,4 +1,4 @@
-"""Fase 1: edital + planilha -> Preparacao (cabeçalho, ciclos e lotes prontos para revisão).
+"""Fase 1: editais + planilha -> Preparacao (cabeçalho, ciclos e lotes prontos para revisão).
 
 Nada aqui toca no SIG. Qualquer erro em triagem, leiloeiro, datas ou ciclos bloqueia tudo;
 erro num lote marca só aquele lote.
@@ -22,7 +22,7 @@ from leilao_sig.util import fmt_data, parse_data, sem_acento
 
 log = logging.getLogger(__name__)
 
-Extrator = Callable[[str, list[Bem], tuple[str, ...]], tuple[ExtracaoEdital, dict]]
+Extrator = Callable[[list[tuple[str, str]], list[Bem], tuple[str, ...]], tuple[ExtracaoEdital, dict]]
 
 
 class Bloqueio(Exception):
@@ -34,20 +34,36 @@ class Bloqueio(Exception):
 
 
 def preparar(
-    caminho_edital: str | Path,
+    caminhos_editais: list[str | Path] | str | Path,
     caminho_planilha: str | Path,
     extrator: Extrator | None = None,
     hoje: date | None = None,
     execucao: Execucao | None = None,
 ) -> Preparacao:
-    extrator = extrator or (lambda t, b, s: ia.extrair(t, b, s))
+    """Um leilão do SIG: um ou mais editais (um por processo) e a planilha da sessão."""
+    if isinstance(caminhos_editais, (str, Path)):
+        caminhos_editais = [caminhos_editais]
+    caminhos = [Path(c) for c in caminhos_editais]
+    extrator = extrator or (lambda e, b, s: ia.extrair(e, b, s))
     hoje = hoje or date.today()
-    prep = Preparacao(edital=str(caminho_edital), planilha=str(caminho_planilha), cabecalho=None, lotes=[], problemas=[])
+    prep = Preparacao(editais=[str(c) for c in caminhos], planilha=str(caminho_planilha), cabecalho=None, lotes=[], problemas=[])
     try:
-        edital = documento.ler_edital(caminho_edital)
-        tri = documento.triar(edital.texto)
-        if tri.bloqueado:
-            raise Bloqueio(tri.motivo)
+        if not caminhos:
+            raise Bloqueio("Nenhum edital selecionado.")
+        if len({c.name for c in caminhos}) != len(caminhos):
+            raise Bloqueio("Há editais com o mesmo nome de arquivo; renomeie para diferenciar.")
+        textos: list[tuple[str, str]] = []
+        suspeitas: set[str] = set()
+        for c in caminhos:
+            try:
+                edital = documento.ler_edital(c)
+            except documento.EditalInvalido as e:
+                raise Bloqueio(f"{c.name}: {e}") from e
+            tri = documento.triar(edital.texto)
+            if tri.bloqueado:
+                raise Bloqueio(f"{c.name}: {tri.motivo}")
+            suspeitas.update(tri.suspeitas)
+            textos.append((c.name, edital.texto))
         try:
             bens, avisos = ler_planilha(caminho_planilha)
         except PlanilhaInvalida as e:
@@ -56,14 +72,13 @@ def preparar(
         if not bens:
             raise Bloqueio("A planilha não tem nenhuma linha com vistoria preenchida.")
 
-        log.info("Edital %s (%d caracteres), %d bens na planilha", caminho_edital, len(edital.texto), len(bens))
-        ext, uso = extrator(edital.texto, bens, tri.suspeitas)
+        log.info("%d edital(is) (%d caracteres), %d bens na planilha",
+                 len(textos), sum(len(t) for _, t in textos), len(bens))
+        ext, uso = extrator(textos, bens, tuple(sorted(suspeitas)))
         prep.extracao = ext
         if execucao:
             execucao.salvar_json("resposta_ia.json", {"uso": uso, "extracao": ext})
-        _montar(prep, ext, bens, edital.texto, hoje)
-    except documento.EditalInvalido as e:
-        prep.problemas.append(Problema("erro", str(e)))
+        _montar(prep, ext, bens, textos, hoje)
     except Bloqueio as e:
         prep.problemas.append(Problema("erro", str(e), trecho=e.trecho))
     except (ia.ErroIA, mod_ciclos.CalendarioDesatualizado) as e:
@@ -75,9 +90,15 @@ def preparar(
     return prep
 
 
-def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, hoje: date) -> None:
-    if ext.tipo_edital != "judicial_comum":
-        raise Bloqueio(f"Edital fora do padrão ({ext.tipo_edital}): {ext.motivo_tipo_edital}")
+def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], textos: list[tuple[str, str]], hoje: date) -> None:
+    texto = "\n\n".join(t for _, t in textos)
+    nomes = {n for n, _ in textos}
+    lidos = {e.arquivo for e in ext.editais}
+    if nomes - lidos:
+        raise Bloqueio(f"A IA não devolveu os dados de: {', '.join(sorted(nomes - lidos))}.")
+    for e in ext.editais:
+        if e.tipo_edital != "judicial_comum":
+            raise Bloqueio(f"{e.arquivo}: edital fora do padrão ({e.tipo_edital}): {e.motivo_tipo_edital}")
 
     leiloeiro = config.achar_leiloeiro(ext.leiloeiro_nome, ext.leiloeiro_site)
     if not leiloeiro:
@@ -92,6 +113,7 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, 
     for a in a1 + a2:
         prep.problemas.append(Problema("alerta", a))
     d1, d2 = parse_data(dt1), parse_data(dt2)
+    _conferir_editais(ext, leiloeiro, (dt1, h1, dt2, h2))
     if d1 < hoje:
         raise Bloqueio(f"O 1º leilão ({dt1}) já passou.", ext.leilao_1.trecho_edital)
     if (d2, h2) <= (d1, h1):
@@ -153,7 +175,7 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, 
             vals, pv = mod_lotes.valores(lote, bem, fonte)
             probs += pv
         lp = LotePreparado(
-            ordem=0, numero_no_edital=lote.numero_no_edital, processo=lote.processo,
+            ordem=0, arquivo_edital=lote.arquivo_edital, numero_no_edital=lote.numero_no_edital, processo=lote.processo,
             vistoria=bem.vistoria if bem else "", chave_vistoria=lote.chave_vistoria,
             tipo_bem=tipo, aba_sig=TIPOS.get(tipo, ("", ""))[1], titulo=lote.titulo, html=montagem.lote_html(lote, ext.distrito_federal),
             v1=vals.get("v1", ""), aval=vals.get("aval", ""), v2=vals.get("v2", ""),
@@ -164,6 +186,33 @@ def _montar(prep: Preparacao, ext: ExtracaoEdital, bens: list[Bem], texto: str, 
     for i, lote in enumerate(mod_lotes.ordenar(para_ordenar), start=1):
         preparados[id(lote)].ordem = i
     prep.lotes = sorted(preparados.values(), key=lambda l: l.ordem)
+
+
+def _conferir_editais(ext: ExtracaoEdital, leiloeiro, datas: tuple[str, str, str, str]) -> None:
+    """Todos os editais do leilão precisam ter o mesmo leiloeiro, encerramentos e venda direta,
+    porque o SIG tem um cabeçalho e uma aba Datas só para o leilão inteiro."""
+    vd = ext.venda_direta
+    vd_cab = (vd.prazo_dias, vd.duracao_ciclo_dias) if vd else None
+    for e in ext.editais:
+        l = config.achar_leiloeiro(e.leiloeiro_nome)
+        if l and l.nome != leiloeiro.nome:
+            raise Bloqueio(f"{e.arquivo}: leiloeiro {l.nome}, diferente do leilão ({leiloeiro.nome}).")
+        try:
+            d = (*_encerramento(1, e.leilao_1)[:2], *_encerramento(2, e.leilao_2)[:2])
+        except Bloqueio as b:
+            raise Bloqueio(f"{e.arquivo}: {b}", b.trecho) from b
+        if d != datas:
+            raise Bloqueio(
+                f"{e.arquivo}: encerramentos {d[0]} {d[1]} / {d[2]} {d[3]} diferentes do leilão "
+                f"({datas[0]} {datas[1]} / {datas[2]} {datas[3]}). Editais com datas diferentes não podem ir no mesmo leilão.",
+                e.leilao_1.trecho_edital,
+            )
+        vd_e = (e.venda_direta.prazo_dias, e.venda_direta.duracao_ciclo_dias) if e.venda_direta else None
+        if vd_e != vd_cab:
+            raise Bloqueio(
+                f"{e.arquivo}: venda direta {vd_e or 'ausente'} diferente do leilão ({vd_cab or 'ausente'}) — prazo e duração dos ciclos (dias).",
+                e.venda_direta.trecho_edital if e.venda_direta else "",
+            )
 
 
 def _hora(h: str) -> str:

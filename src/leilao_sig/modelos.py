@@ -52,7 +52,22 @@ class Bloco(_Base):
     texto: str  # MAIÚSCULAS, texto puro; parágrafos internos separados por \n
 
 
+class EditalInfo(_Base):
+    """Fatos de cada edital da sessão, para o sistema conferir se todos batem com o cabeçalho."""
+
+    arquivo: str  # nome do arquivo, como no atributo <edital arquivo="...">
+    tipo_edital: TipoEdital
+    motivo_tipo_edital: str
+    vara: str
+    leiloeiro_nome: str
+    processos: list[str]
+    leilao_1: Pregao
+    leilao_2: Pregao
+    venda_direta: VendaDireta | None
+
+
 class LoteIA(_Base):
+    arquivo_edital: str
     numero_no_edital: str
     processo: str
     vistoria_planilha: str | None  # Nº Vistoria da linha da planilha que corresponde a este bem
@@ -75,8 +90,9 @@ class LoteIA(_Base):
 
 
 class ExtracaoEdital(_Base):
-    tipo_edital: TipoEdital
-    motivo_tipo_edital: str
+    """Um leilão do SIG: um cabeçalho para a sessão inteira, que pode ter vários editais."""
+
+    editais: list[EditalInfo]
     titulo_leilao: str  # JUSTIÇA ESTADUAL DE CIDADE/UF - VARA
     comarca_cidade: str
     uf: str
@@ -109,6 +125,7 @@ class Problema:
 @dataclass
 class LotePreparado:
     ordem: int
+    arquivo_edital: str
     numero_no_edital: str
     processo: str
     vistoria: str
@@ -145,7 +162,7 @@ class CabecalhoPreparado:
 
 @dataclass
 class Preparacao:
-    edital: str
+    editais: list[str]
     planilha: str
     cabecalho: CabecalhoPreparado | None
     lotes: list[LotePreparado]

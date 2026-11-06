@@ -1,6 +1,6 @@
 # Leilão SIG
 
-App de desktop que lê o edital de leilão judicial e a planilha "Bens do Leilão", prepara
+App de desktop que lê os editais de uma sessão de leilão judicial (um por processo) e a planilha "Bens do Leilão", prepara
 cabeçalho, datas (ciclos da venda direta) e lotes com a API do Claude e — a partir da Fase 2 —
 cadastra tudo no SIG. O plano completo está em [PLANO.md](PLANO.md).
 
@@ -33,12 +33,12 @@ Para mudar uma regra sem recompilar o .exe, copie o JSON para
 
 ## Como funciona
 
-1. Lê o edital (PDF, .docx; .doc via Word ou LibreOffice). PDF sem texto = escaneado → para.
+1. Lê os editais da sessão (PDF, .docx; .doc via Word ou LibreOffice). PDF sem texto = escaneado → para.
 2. Triagem por palavras-chave (Senad, Alienações MS, Giordano, vários editais) → para sem gastar API.
-3. Lê a planilha; só entram linhas com Nº Vistoria. Processo comparado só pelos dígitos.
+3. Lê a planilha; só entram linhas com Nº Vistoria. Linhas com o mesmo processo + vistoria são um lote só (valores somados). Processo comparado só pelos dígitos.
 4. IA (Claude, saída JSON validada) extrai fatos, blocos do cabeçalho e textos dos lotes, e
    indica qual linha da planilha é cada lote.
-5. O código valida e calcula: leiloeiro conhecido, datas, fuso, ciclos/recesso, horário dos
+5. O código valida e calcula: leiloeiro conhecido, editais da sessão com as mesmas datas/venda direta, datas, fuso, ciclos/recesso, horário dos
    ciclos, ordem dos lotes, valores (planilha), título ≤ 56, HTML com a formatação padrão.
 6. Tela de revisão: relatório (erros/alertas com trecho do edital), cabeçalho, ciclos e lotes.
 

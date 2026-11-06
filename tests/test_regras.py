@@ -201,3 +201,22 @@ def test_mesma_vistoria_em_processos_diferentes(tmp_path):
     ]))
     _, avisos = agrupar(bens)
     assert "processos diferentes" in avisos[0]
+
+
+@pytest.mark.parametrize("tipo,esperado", [
+    ("Imóveis", "imovel"), ("Imóvel", "imovel"), ("Veículos", "veiculo"), ("Equipamentos", "equipamento"), ("Sucata", "outro"),
+])
+def test_tipo_singular_e_plural(tipo, esperado):
+    from leilao_sig.planilha import tipo_normalizado
+    assert tipo_normalizado(tipo) == esperado
+
+
+def test_soma_exata_arredonda_so_o_total(tmp_path):
+    # 3 × 0,335 = 1,005 -> 1,01 (arredondando cada linha antes daria 3 × 0,34 = 1,02)
+    bens, _ = ler_planilha(fabrica.planilha(tmp_path / "p.xlsx", [
+        [fabrica.PROC_A, "Equipamentos", 1, None, 1, 0.335, "a"],
+        [fabrica.PROC_A, "Equipamentos", 1, None, 1, 0.335, "b"],
+        [fabrica.PROC_A, "Equipamentos", 1, None, 1, 0.335, "c"],
+    ]))
+    (g,), _ = agrupar(bens)
+    assert str(g.lance_minimo) == "1.01" and str(g.avaliacao) == "3.00"
