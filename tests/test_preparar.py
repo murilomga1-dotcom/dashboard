@@ -128,3 +128,35 @@ def test_sessao_com_venda_direta_diferente_bloqueia(tmp_path):
 def test_ia_esqueceu_um_edital_bloqueia(tmp_path):
     prep, _, _ = _rodar(tmp_path, fabrica.extracao(), n_editais=2)
     assert prep.bloqueado and "edital2.docx" in prep.problemas[-1].mensagem
+
+
+def test_resposta_salva_sem_chamar_api(tmp_path):
+    """'Usar resposta salva': o resposta_ia.json de uma execução vira a entrada da próxima."""
+    import json
+    from leilao_sig import ia
+
+    with Execucao(tmp_path / "exec1") as ex:
+        primeira = preparar(fabrica.edital(tmp_path / "edital.docx"), fabrica.planilha(tmp_path / "bens.xlsx"),
+                            extrator=lambda e, b, s: (fabrica.extracao(), {}), hoje=HOJE, execucao=ex)
+    salva = ex.pasta / "resposta_ia.json"
+    # o mesmo edital baixado de novo com outro nome continua servindo (um edital só)
+    outro = fabrica.edital(tmp_path / "edital_baixado_de_novo.docx")
+    segunda = preparar(outro, tmp_path / "bens.xlsx", extrator=ia.extrator_de_arquivo(salva), hoje=HOJE)
+    assert not segunda.bloqueado, segunda.problemas
+    assert segunda.cabecalho.html == primeira.cabecalho.html
+    assert {l.arquivo_edital for l in segunda.lotes} == {"edital_baixado_de_novo.docx"}
+    # também aceita o JSON só com a extração
+    puro = tmp_path / "puro.json"
+    puro.write_text(json.dumps(json.loads(salva.read_text(encoding="utf-8"))["extracao"]), encoding="utf-8")
+    assert not preparar(outro, tmp_path / "bens.xlsx", extrator=ia.extrator_de_arquivo(puro), hoje=HOJE).bloqueado
+
+
+def test_exemplo_do_repositorio_e_valido():
+    from pathlib import Path
+    from leilao_sig import ia
+    from leilao_sig.modelos import ExtracaoEdital
+    import json
+    caminho = Path(__file__).resolve().parents[1] / "exemplos" / "0056381" / "resposta_ia.json"
+    ext = ExtracaoEdital.model_validate(json.loads(caminho.read_text(encoding="utf-8"))["extracao"])
+    assert ext.lotes[0].vistoria_planilha == "13816" and len(ext.lotes[0].titulo) <= 56
+    assert callable(ia.extrator_de_arquivo(caminho))

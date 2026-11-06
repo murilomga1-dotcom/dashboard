@@ -26,6 +26,13 @@ python -m pytest               # testes (não usam a API; os do SIG usam um SIG 
 A chave da API do Claude fica no Cofre de Credenciais do Windows (botão **Chave da API…**).
 Sem ela, o app usa a variável `ANTHROPIC_API_KEY`.
 
+## Testar sem a chave da API
+
+O botão **Usar resposta salva…** prepara o leilão com um `resposta_ia.json` já existente, sem
+chamar a API. Serve para refazer uma sessão sem pagar de novo (o arquivo fica na pasta de cada
+execução) e para testar: `exemplos/0056381/resposta_ia.json` é um exemplo **feito à mão** para o
+edital do processo 0056381-54.2016.8.05.0001 (planilha `bens_leilao_8268.xlsx`).
+
 ## Onde ficam as regras
 
 | Arquivo | O que define |

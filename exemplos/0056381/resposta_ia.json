@@ -1,0 +1,121 @@
+{
+  "_aviso": "EXEMPLO FEITO À MÃO (não é resposta da IA) para o edital do processo 0056381-54.2016.8.05.0001, seguindo as regras de prompts/sistema.md. Serve para testar o app sem chave da API.",
+  "uso": {
+    "modelo": "exemplo manual"
+  },
+  "extracao": {
+    "editais": [
+      {
+        "arquivo": "edital_0056381.pdf",
+        "tipo_edital": "judicial_comum",
+        "motivo_tipo_edital": "Edital de leilão judicial comum (TJBA, Juizados Especiais de Salvador), um processo.",
+        "vara": "1ª VARA DO SISTEMA DOS JUIZADOS ESPECIAIS DE CAUSAS COMUNS",
+        "leiloeiro_nome": "PAULO CÉZAR ROCHA TEIXEIRA",
+        "processos": [
+          "0056381-54.2016.8.05.0001"
+        ],
+        "leilao_1": {
+          "data_inicio": null,
+          "hora_inicio": null,
+          "data_encerramento": "19/11/2026",
+          "hora_encerramento": "11:00",
+          "duracao_minutos": null,
+          "trecho_edital": "DATAS: 1º Leilão no dia 19/11/2026, com encerramento às 11:00 horas."
+        },
+        "leilao_2": {
+          "data_inicio": null,
+          "hora_inicio": null,
+          "data_encerramento": "26/11/2026",
+          "hora_encerramento": "11:00",
+          "duracao_minutos": null,
+          "trecho_edital": "2º Leilão no dia 26/11/2026, com encerramento às 11:00 horas, quando serão aceitos lances com no mínimo 80% (oitenta por cento) da avaliação"
+        },
+        "venda_direta": {
+          "prazo_dias": 60,
+          "duracao_ciclo_dias": 15,
+          "horario_fixado_no_edital": null,
+          "trecho_edital": "O prazo da venda direta é de 60 (sessenta) dias, sendo fechada em ciclos de 15 dias cada."
+        }
+      }
+    ],
+    "titulo_leilao": "JUSTIÇA ESTADUAL DE SALVADOR/BA - 1ª VARA DO SISTEMA DOS JUIZADOS ESPECIAIS DE CAUSAS COMUNS",
+    "comarca_cidade": "Salvador",
+    "uf": "BA",
+    "distrito_federal": false,
+    "leiloeiro_nome": "PAULO CÉZAR ROCHA TEIXEIRA",
+    "leiloeiro_site": "www.leiloesjudiciaisbahia.com.br",
+    "telefone_0800_edital": "0800 500 9961",
+    "leilao_1": {
+      "data_inicio": null,
+      "hora_inicio": null,
+      "data_encerramento": "19/11/2026",
+      "hora_encerramento": "11:00",
+      "duracao_minutos": null,
+      "trecho_edital": "DATAS: 1º Leilão no dia 19/11/2026, com encerramento às 11:00 horas."
+    },
+    "leilao_2": {
+      "data_inicio": null,
+      "hora_inicio": null,
+      "data_encerramento": "26/11/2026",
+      "hora_encerramento": "11:00",
+      "duracao_minutos": null,
+      "trecho_edital": "2º Leilão no dia 26/11/2026, com encerramento às 11:00 horas, quando serão aceitos lances com no mínimo 80% (oitenta por cento) da avaliação"
+    },
+    "venda_direta": {
+      "prazo_dias": 60,
+      "duracao_ciclo_dias": 15,
+      "horario_fixado_no_edital": null,
+      "trecho_edital": "O prazo da venda direta é de 60 (sessenta) dias, sendo fechada em ciclos de 15 dias cada."
+    },
+    "blocos_cabecalho": [
+      {
+        "tipo": "participacao",
+        "texto": "PARA PARTICIPAÇÃO E OFERTA DE LANCES ELETRÔNICOS, OS INTERESSADOS DEVERÃO FAZER CADASTRO PRÉVIO NO SITE www.leiloesjudiciaisbahia.com.br. ORIENTAMOS REALIZAR O CADASTRO E O ENVIO DA DOCUMENTAÇÃO NECESSÁRIA COM NO MÍNIMO 24 HORAS DE ANTECEDÊNCIA, EVITANDO ASSIM, PROBLEMAS NA LIBERAÇÃO."
+      },
+      {
+        "tipo": "direito_preferencia",
+        "texto": "DIREITO DE PREFERÊNCIA: PARA QUE QUEM TIVER DIREITO (ART. 892 § 2º E 3º, 843 § 2º, AMBOS DO CÓDIGO PROCESSO CIVIL) POSSA EXERCER O DIREITO DE PREFERÊNCIA DOS BENS LEILOADOS, DEVERÃO, DE MODO PRÉVIO, CADASTRAR-SE E SOLICITAR HABILITAÇÃO NO SITE www.leiloesjudiciaisbahia.com.br. AO EFETUAR O CADASTRO E HABILITAÇÃO, INFORMAR A CONDIÇÃO DE PREFERÊNCIA DO BEM, PARA PODER, SE QUISER, EXERCER REFERIDO DIREITO."
+      },
+      {
+        "tipo": "valor_minimo",
+        "texto": "NO 1º LEILÃO O LANCE MÍNIMO É IGUAL OU SUPERIOR AO VALOR DA AVALIAÇÃO, NO 2º LEILÃO É MENOR, CONFORME ABAIXO."
+      },
+      {
+        "tipo": "repasse",
+        "texto": "O BEM NÃO ARREMATADO, SERÁ DISPONIBILIZADO NOVAMENTE EM REPASSE, EM ATÉ 15 MINUTOS APÓS O ENCERRAMENTO DO 2º LEILÃO, COM DURAÇÃO DE 01:00 HORA."
+      },
+      {
+        "tipo": "cronometro",
+        "texto": "PARA LANCES DADOS NOS ÚLTIMOS MINUTOS DO ENCERRAMENTO, O CRONÔMETRO PRORROGARÁ EM 03 MINUTOS PARA DISPUTAS."
+      }
+    ],
+    "lotes": [
+      {
+        "arquivo_edital": "edital_0056381.pdf",
+        "numero_no_edital": "1",
+        "processo": "0056381-54.2016.8.05.0001",
+        "vistoria_planilha": "13816",
+        "tipo_bem": "equipamento",
+        "titulo": "Lote c/ 3 equipamentos automotivos - Salvador/BA",
+        "resumo": "01 elevador automotivo marca Engecass, nº de série 13951, tensão 220V; 01 máquina de balanceamento de pneus marca Bolanho, modelo CT 430, nº 1012210; e 01 desmontadora de pneu marca Bolanho, modelo CT 570, nº 120712 B, todos na cor vermelha (Proc. 0056381-54.2016.8.05.0001)",
+        "parcelamento": null,
+        "obs": "Obs.: Correrão por conta do arrematante as despesas relativas à transferência dos bens e às diligências do Oficial de Justiça, se houver.",
+        "frases": [],
+        "localizacao": "Rua Tenente Valmir Alcântara, 158-E, São Gonçalo do Retiro, Salvador - BA, CEP 41.150-520",
+        "partes_df": [],
+        "incra": null,
+        "cri": null,
+        "chave_vistoria": "Engecass",
+        "cidade_uf_bem": "Salvador/BA",
+        "avaliacao_edital": "26.000,00",
+        "lance_2o_leilao_edital": "20.800,00",
+        "percentual_2o_leilao": "80%",
+        "trecho_edital": "DESCRIÇÃO DO(S) BEM(NS): 01) 01 (um) Elevador automotivo na cor vermelha, marca Engecass, nº de série 13951, tensão 220V, avaliado em R$ 12.000,00"
+      }
+    ],
+    "alertas": [
+      "O processo tem terceiro interessado identificado como arrematante anterior: conferir se há arrematação anterior pendente.",
+      "Comissão de 5% informada no edital (bloco de comissão omitido). Sem seção de parcelamento: pagamento à vista."
+    ]
+  }
+}

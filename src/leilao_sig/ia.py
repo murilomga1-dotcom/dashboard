@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from functools import lru_cache
+from pathlib import Path
 
 import anthropic
 
@@ -133,3 +134,28 @@ def extrair(editais: list[tuple[str, str]], bens: list[Bem], suspeitas: tuple[st
             except Exception as e:
                 raise ErroIA(f"Resposta da IA fora do formato esperado: {e}") from e
     raise ErroIA("A IA não devolveu conteúdo.")
+
+
+def extrator_de_arquivo(caminho: str | Path):
+    """Usa uma resposta salva (resposta_ia.json de uma execução anterior, ou um exemplo) no
+    lugar de chamar a API: para testar sem chave ou refazer uma sessão sem pagar de novo.
+
+    Se houver um edital só dos dois lados e o nome do arquivo for outro, a resposta é
+    associada ao edital escolhido (o nome do PDF muda quando é baixado de novo).
+    """
+    dados = json.loads(Path(caminho).read_text(encoding="utf-8"))
+    bruto = dados.get("extracao", dados)
+
+    def extrator(editais: list[tuple[str, str]], bens: list[Bem], suspeitas: tuple[str, ...] = ()):
+        ext = ExtracaoEdital.model_validate(bruto)
+        nomes = [n for n, _ in editais]
+        if len(nomes) == 1 and len(ext.editais) == 1 and ext.editais[0].arquivo != nomes[0]:
+            antigo = ext.editais[0].arquivo
+            ext.editais[0].arquivo = nomes[0]
+            for lote in ext.lotes:
+                if lote.arquivo_edital == antigo:
+                    lote.arquivo_edital = nomes[0]
+        log.info("Usando resposta salva %s (sem chamar a API)", caminho)
+        return ext, {"modelo": "resposta salva", "arquivo": str(caminho), "entrada": 0, "saida": 0}
+
+    return extrator

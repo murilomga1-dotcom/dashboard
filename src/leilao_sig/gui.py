@@ -31,14 +31,15 @@ COR_ALERTA = QColor("#fff4d6")
 class _Trabalho(QObject):
     terminou = Signal(object, str)  # (Preparacao | None, pasta da execução ou mensagem de erro)
 
-    def __init__(self, editais: list[str], planilha: str):
+    def __init__(self, editais: list[str], planilha: str, resposta_salva: str = ""):
         super().__init__()
-        self.editais, self.planilha = editais, planilha
+        self.editais, self.planilha, self.resposta_salva = editais, planilha, resposta_salva
 
     def rodar(self) -> None:
         try:
             with Execucao() as ex:
-                prep = preparar(self.editais, self.planilha, execucao=ex)
+                extrator = ia.extrator_de_arquivo(self.resposta_salva) if self.resposta_salva else None
+                prep = preparar(self.editais, self.planilha, extrator=extrator, execucao=ex)
             self.terminou.emit(prep, str(ex.pasta))
         except Exception as e:  # nunca derrubar a tela
             self.terminou.emit(None, f"{type(e).__name__}: {e}")
@@ -127,6 +128,9 @@ class Janela(QMainWindow):
 
         self.bt_preparar = QPushButton("Preparar com a IA")
         self.bt_preparar.clicked.connect(self._preparar)
+        self.bt_salva = QPushButton("Usar resposta salva…")
+        self.bt_salva.setToolTip("Prepara com um resposta_ia.json já existente, sem chamar a API (teste sem chave ou refazer sem pagar).")
+        self.bt_salva.clicked.connect(self._preparar_com_resposta_salva)
         self.bt_gravar = QPushButton("Gravar no SIG")
         self.bt_gravar.setEnabled(False)
         self.bt_gravar.setToolTip("Grava o cabeçalho e as datas (ciclos) no SIG. Lotes: Fase 3.")
@@ -137,7 +141,7 @@ class Janela(QMainWindow):
         self.bt_chave = QPushButton("Chave da API…")
         self.bt_chave.clicked.connect(self._configurar_chave)
         botoes = QHBoxLayout()
-        for b in (self.bt_preparar, self.bt_gravar, self.bt_log):
+        for b in (self.bt_preparar, self.bt_salva, self.bt_gravar, self.bt_log):
             botoes.addWidget(b)
         botoes.addStretch()
         botoes.addWidget(self.bt_chave)
@@ -212,15 +216,24 @@ class Janela(QMainWindow):
             except Exception as e:
                 QMessageBox.warning(self, "Chave", f"Não foi possível salvar a chave: {e}")
 
-    def _preparar(self) -> None:
+    def _preparar_com_resposta_salva(self) -> None:
+        c, _ = QFileDialog.getOpenFileName(self, "Resposta salva da IA", "", "Resposta da IA (*.json)")
+        if c:
+            self._preparar(resposta_salva=c)
+
+    def _preparar(self, resposta_salva: str = "") -> None:
         editais, planilha = self.editais, self.campo_planilha.text()
         if not (editais and planilha):
             QMessageBox.warning(self, "Faltam arquivos", "Escolha os editais e a planilha.")
             return
         self.bt_preparar.setEnabled(False)
-        self.status.setText(f"Lendo {len(editais)} edital(is) e consultando a IA… (pode levar alguns minutos)")
+        self.bt_salva.setEnabled(False)
+        self.status.setText(
+            f"Preparando com a resposta salva {Path(resposta_salva).name}…" if resposta_salva
+            else f"Lendo {len(editais)} edital(is) e consultando a IA… (pode levar alguns minutos)"
+        )
         self._thread = QThread()
-        self._trab = _Trabalho(editais, planilha)
+        self._trab = _Trabalho(editais, planilha, resposta_salva)
         self._trab.moveToThread(self._thread)
         self._thread.started.connect(self._trab.rodar)
         self._trab.terminou.connect(self._terminou)
@@ -229,6 +242,7 @@ class Janela(QMainWindow):
 
     def _terminou(self, prep: Preparacao | None, info: str) -> None:
         self.bt_preparar.setEnabled(True)
+        self.bt_salva.setEnabled(True)
         if prep is None:
             self.status.setText(f"Falha inesperada: {info}")
             return
