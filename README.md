@@ -11,6 +11,10 @@ O cadastro usa o **Google Chrome instalado na máquina** (não precisa `playwrig
 perfil próprio do app em `%LOCALAPPDATA%\LeilaoSIG\chrome-perfil`: o login do SIG é feito uma vez
 nessa janela e fica salvo. Se a sessão cair, o app para e pede o login.
 
+## Instalar no Windows
+
+Com o Python 3.11+ instalado: dois cliques em `instalar.bat` (uma vez) e depois em `abrir.bat`.
+
 ## Rodar (desenvolvimento)
 
 ```bash
