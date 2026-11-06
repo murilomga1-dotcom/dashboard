@@ -3,5 +3,7 @@
   "esforco": "high",
   "fonte_valores": "planilha",
   "revisao_obrigatoria": true,
-  "pasta_dados": "%LOCALAPPDATA%/LeilaoSIG"
+  "pasta_dados": "%LOCALAPPDATA%/LeilaoSIG",
+  "sig_url": "https://sig.leiloesjudiciaisbrasil.com.br",
+  "chrome_canal": "chrome"
 }

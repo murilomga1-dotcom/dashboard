@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 )
 
 from leilao_sig import __version__, ia
+from leilao_sig import registro as reg
 from leilao_sig.execucao import Execucao
 from leilao_sig.modelos import Preparacao
 from leilao_sig.preparar import preparar
@@ -41,6 +42,48 @@ class _Trabalho(QObject):
             self.terminou.emit(prep, str(ex.pasta))
         except Exception as e:  # nunca derrubar a tela
             self.terminou.emit(None, f"{type(e).__name__}: {e}")
+
+
+class _TrabalhoSIG(QObject):
+    """Fase 2: cabeçalho + datas no SIG, numa thread (o Chrome do app fica visível)."""
+
+    aviso = Signal(str)
+    terminou = Signal(str, str, str)  # (tipo: ok|verificar|erro, mensagem, pasta)
+
+    def __init__(self, prep: Preparacao):
+        super().__init__()
+        self.prep = prep
+
+    def rodar(self) -> None:
+        from leilao_sig.sig import cadastro
+        from leilao_sig.sig.navegador import ForaDasTelas, NavegadorSIG, SessaoExpirada
+
+        pasta = ""
+        try:
+            with Execucao() as ex:
+                pasta = str(ex.pasta)
+                registro = reg.Registro()
+                cadastro.verificar_registro_ou_continuar(self.prep, registro)
+                with NavegadorSIG(pasta_prints=ex.pasta / "prints") as nav:
+                    nav.page.goto(nav.base_url + cadastro.URL_FORMULARIO, wait_until="domcontentloaded")
+                    if nav.na_tela_de_login():
+                        self.aviso.emit("Faça login no SIG na janela do Chrome que abriu (o app espera até 5 minutos)…")
+                        nav.esperar_login()
+                    self.aviso.emit("Gravando cabeçalho e datas no SIG…")
+                    res = cadastro.gravar_cabecalho_e_datas(nav, self.prep, registro)
+                ex.salvar_json("gravacao.json", res)
+            ciclos = ", ".join(res.ciclos_gravados) or "nenhum novo"
+            self.terminou.emit("ok", f"Leilão gravado no SIG: ID {res.sig_id}. Ciclos gravados: {ciclos}.", pasta)
+        except cadastro.VerificarNoSIG as e:
+            self.terminou.emit("verificar", str(e), pasta)
+        except cadastro.JaCadastrado as e:
+            self.terminou.emit("erro", str(e), pasta)
+        except SessaoExpirada as e:
+            self.terminou.emit("erro", f"{e} Depois clique em Gravar no SIG de novo (nada será duplicado).", pasta)
+        except (cadastro.ParadaTotal, ForaDasTelas) as e:
+            self.terminou.emit("erro", f"PAROU: {e} Veja o print e o log na pasta da execução.", pasta)
+        except Exception as e:  # nunca derrubar a tela
+            self.terminou.emit("erro", f"Falha inesperada: {type(e).__name__}: {e}", pasta)
 
 
 def _tabela(colunas: list[str]) -> QTableWidget:
@@ -86,7 +129,8 @@ class Janela(QMainWindow):
         self.bt_preparar.clicked.connect(self._preparar)
         self.bt_gravar = QPushButton("Gravar no SIG")
         self.bt_gravar.setEnabled(False)
-        self.bt_gravar.setToolTip("Disponível na Fase 2 (cadastro automático no SIG).")
+        self.bt_gravar.setToolTip("Grava o cabeçalho e as datas (ciclos) no SIG. Lotes: Fase 3.")
+        self.bt_gravar.clicked.connect(self._gravar)
         self.bt_log = QPushButton("Abrir pasta do log")
         self.bt_log.setEnabled(False)
         self.bt_log.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(self.pasta_execucao)))
@@ -192,8 +236,69 @@ class Janela(QMainWindow):
         self.bt_log.setEnabled(True)
         self.mostrar(prep)
 
+    def _gravar(self) -> None:
+        prep = self.prep
+        if not prep or prep.bloqueado or not prep.cabecalho:
+            return
+        c = prep.cabecalho
+        ciclos = "\n".join(f"   {x.rotulo}: {fmt_data(x.data)} às {x.hora}" for x in c.ciclos) or "   (sem venda direta)"
+        resp = QMessageBox.question(
+            self, "Gravar no SIG",
+            f"Conferiu o Relatório? Será gravado no SIG:\n\n{c.titulo}\nLeiloeiro: {c.leiloeiro} · Fuso {c.fuso}\n"
+            f"1º encerramento: {c.dt1} {c.h1}\n2º encerramento: {c.dt2} {c.h2}\nCiclos:\n{ciclos}\n\n"
+            "Os lotes entram na Fase 3. Continuar?",
+        )
+        if resp != QMessageBox.StandardButton.Yes:
+            return
+        self.bt_gravar.setEnabled(False)
+        self.bt_preparar.setEnabled(False)
+        self.status.setText("Abrindo o Chrome do app…")
+        self._thread_sig = QThread()
+        self._trab_sig = _TrabalhoSIG(prep)
+        self._trab_sig.moveToThread(self._thread_sig)
+        self._thread_sig.started.connect(self._trab_sig.rodar)
+        self._trab_sig.aviso.connect(self.status.setText)
+        self._trab_sig.terminou.connect(self._gravou)
+        self._trab_sig.terminou.connect(self._thread_sig.quit)
+        self._thread_sig.start()
+
+    def _gravou(self, tipo: str, msg: str, pasta: str) -> None:
+        self.bt_preparar.setEnabled(True)
+        self.bt_gravar.setEnabled(bool(self.prep and not self.prep.bloqueado))
+        if pasta:
+            self.pasta_execucao = pasta
+            self.bt_log.setEnabled(True)
+        self.status.setText(("✅ " if tipo == "ok" else "⛔ ") + msg)
+        if tipo == "verificar":
+            self._resolver_pendencia(msg)
+        elif tipo == "erro":
+            QMessageBox.warning(self, "Gravar no SIG", msg)
+
+    def _resolver_pendencia(self, msg: str) -> None:
+        """Gravação anterior sem confirmação: o usuário olha no SIG e diz o que encontrou."""
+        from leilao_sig.sig import cadastro
+
+        caixa = QMessageBox(self)
+        caixa.setWindowTitle("Verificar no SIG")
+        caixa.setText(msg + "\n\nO leilão aparece no SIG?")
+        existe = caixa.addButton("Sim, existe", QMessageBox.ButtonRole.YesRole)
+        nao = caixa.addButton("Não existe", QMessageBox.ButtonRole.NoRole)
+        caixa.addButton("Ainda não verifiquei", QMessageBox.ButtonRole.RejectRole)
+        caixa.exec()
+        chave = cadastro.chave_de(self.prep.cabecalho)
+        registro = reg.Registro()
+        if caixa.clickedButton() is existe:
+            sig_id, ok = QInputDialog.getText(self, "ID do leilão", "ID do leilão no SIG (número na URL edita-leilao/id/…):")
+            if ok and sig_id.strip().isdigit():
+                registro.leilao_confirmado(chave, sig_id.strip())
+                self.status.setText(f"Registrado como gravado (ID {sig_id.strip()}). Clique em Gravar no SIG para continuar nas datas.")
+        elif caixa.clickedButton() is nao:
+            registro.descartar_leilao(chave)
+            self.status.setText("Registro pendente descartado. Pode clicar em Gravar no SIG de novo.")
+
     def mostrar(self, prep: Preparacao) -> None:
         self.prep = prep
+        self.bt_gravar.setEnabled(not prep.bloqueado)
         erros = [p for p in prep.problemas if p.nivel == "erro"]
         n_ok = sum(l.pode_gravar for l in prep.lotes)
         if prep.bloqueado:

@@ -55,9 +55,15 @@ virou código testado, e a IA não calcula nada disso.
 
 ## Fases
 
-1. **Fase 1 — só leitura (este commit):** ler edital e planilha, triagem, IA, ciclos/fuso/ordem,
+1. **Fase 1 — só leitura (feita):** ler edital e planilha, triagem, IA, ciclos/fuso/ordem,
    validações, HTML e tela de revisão. Não toca no SIG.
-2. **Fase 2:** Playwright, login com perfil salvo, cadastro do cabeçalho e das datas.
+2. **Fase 2 — cabeçalho e datas (feita, testada num SIG falso local):** Chrome com perfil salvo,
+   espera do login, scripts da skill via `page.evaluate`, correção dos interruptores iButton,
+   ID do leilão pela URL, ciclos na aba Datas, registro em duas fases, retomada sem duplicar.
+   **Falta validar no SIG real** os pontos que o SIG falso só imita: a classe do iButton
+   (`ibutton-container`), a detecção da tela de login (campo de senha), o recarregamento da aba
+   Datas depois de salvar e o redirecionamento para `edita-leilao/id/<ID>`. Primeira execução
+   real: acompanhada, com um leilão que vá mesmo ser cadastrado.
 3. **Fase 3:** lotes, erro por lote, relatório, "tentar de novo", anti-duplicidade.
 4. **Fase 4:** .exe (PyInstaller), instalador, cofre da chave.
 
@@ -96,6 +102,6 @@ edital está lá: vistoria 13816, 3 linhas, total R$ 26.000,00 / R$ 20.800,00 �
 
 - Título com varas diferentes: todas as varas no título, na ordem dos editais, sem repetir
   (`JUSTIÇA ESTADUAL DE CIDADE/UF - 1ª VARA ... / 2ª VARA ...`), montado pelo código.
-- O SIG tem API ou importação por planilha? (seria mais estável que automatizar a tela)
-- Quantos PCs vão usar? (se mais de um, o registro anti-duplicidade precisa ser compartilhado)
+- SIG sem API nem importação: automação pela tela é o único caminho (confirmado).
+- 1 computador: o registro anti-duplicidade fica local, em `registro.sqlite` (confirmado).
 - Calendário 2027/2028: feriados e recesso além da tabela atual.

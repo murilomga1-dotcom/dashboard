@@ -4,14 +4,19 @@ App de desktop que lê os editais de uma sessão de leilão judicial (um por pro
 cabeçalho, datas (ciclos da venda direta) e lotes com a API do Claude e — a partir da Fase 2 —
 cadastra tudo no SIG. O plano completo está em [PLANO.md](PLANO.md).
 
-**Estado atual: Fase 1 (só leitura).** O app gera e mostra tudo para revisão, mas ainda não grava no SIG.
+**Estado atual: Fase 2.** O app prepara tudo para revisão e o botão **Gravar no SIG** cadastra o
+cabeçalho e as datas (ciclos). Os lotes entram na Fase 3.
+
+O cadastro usa o **Google Chrome instalado na máquina** (não precisa `playwright install`), com um
+perfil próprio do app em `%LOCALAPPDATA%\LeilaoSIG\chrome-perfil`: o login do SIG é feito uma vez
+nessa janela e fica salvo. Se a sessão cair, o app para e pede o login.
 
 ## Rodar (desenvolvimento)
 
 ```bash
 pip install -e .[dev]          # no Windows: pip install -e .[dev,windows]
 leilao-sig                     # abre a tela
-python -m pytest               # testes (não usam a API)
+python -m pytest               # testes (não usam a API; os do SIG usam um SIG falso local)
 ```
 
 A chave da API do Claude fica no Cofre de Credenciais do Windows (botão **Chave da API…**).
@@ -41,6 +46,11 @@ Para mudar uma regra sem recompilar o .exe, copie o JSON para
 5. O código valida e calcula: leiloeiro conhecido, editais da sessão com as mesmas datas/venda direta, datas, fuso, ciclos/recesso, horário dos
    ciclos, ordem dos lotes, valores (planilha), título ≤ 56, HTML com a formatação padrão.
 6. Tela de revisão: relatório (erros/alertas com trecho do edital), cabeçalho, ciclos e lotes.
+
+7. **Gravar no SIG** (depois de confirmar): preenche o formulário com os scripts da skill, corrige
+   os interruptores, salva, anota o ID do leilão e cadastra os ciclos na aba Datas. Erro no
+   cabeçalho ou nas datas para tudo (com print). O registro local (`registro.sqlite`) impede
+   duplicar: rodar de novo continua de onde parou no mesmo leilão.
 
 Cada execução grava `execucao.log`, a resposta da IA e a preparação em
 `%LOCALAPPDATA%\LeilaoSIG\execucoes\<data_hora>\`.
